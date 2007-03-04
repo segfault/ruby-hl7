@@ -39,7 +39,6 @@ require 'facets/core/class/cattr'
 module HL7
 end
 
-
 class HL7::Exception < StandardError
 end
 
@@ -85,6 +84,13 @@ class HL7::Message
     end
   end
 
+  def <<( value )
+    #raise HL7::Exception.new( "invalid argument to <<" ) if value.kind_of?(HL7::Message::Segment)
+    (@segments ||= []) << value
+    name = value.class.to_s.gsub("HL7::Message::Segment::", "").to_sym
+    (@segments_by_name[ name ] ||= []) << value
+  end
+
   def self.parse( inobj )
     #puts "here"
     ret = HL7::Message.new
@@ -107,7 +113,12 @@ class HL7::Message
     #puts "done"
   end
 
-  def to_s                         
+  def each
+    return unless @segments
+    @segments.each { |s| yield s }
+  end
+
+  def to_s    
     @segments.join( '\n' )
   end
 
@@ -169,7 +180,6 @@ class HL7::Message
     end
 
   end
-
 end                
 
 class HL7::Message::Segment
@@ -177,16 +187,23 @@ class HL7::Message::Segment
   attr :item_delim
   attr :segment_weight
 
-
   def initialize(raw_segment="")
     @segments_by_name = {}
     @element_delim = '|'
-    if (raw_segment.kind_of? Array)
-      @elements = raw_segment
+    @field_total = 0
+
+    if (raw_segment != nil && raw_segment != "")
+      if (raw_segment.kind_of? Array)
+        @elements = raw_segment
+      else
+        @elements = raw_segment.split( element_delim, -1 )
+      end
     else
-      @elements = raw_segment.split( element_delim, -1 )
+      (@elements ||= []) << self.class.to_s.split( ':' ).last
+      @elements << ""
     end
     #puts "element count: %d" % @elements.length
+    
   end
 
   def to_info
@@ -212,25 +229,55 @@ class HL7::Message::Segment
     end
   end
 
+  def <=>( other )
+    #return nil if other.kind_of?(HL7::Message::Segment)
+    diff = self.weight - other.weight
+    return 1 if diff > 0
+    return -1 if diff < 0
+    return 0
+  end
   
+  def weight
+    self.class.weight
+  end
 
   private
   def self.singleton
     class << self; self end
   end
 
+  def self.segment_weight( my_weight )
+    singleton.module_eval do
+      @my_weight = my_weight
+    end
+  end
+
+  def self.weight
+    singleton.module_eval do
+      return 999 unless @my_weight
+      @my_weight
+    end
+  end
+
   def self.add_field( options={} )
     options = {:name => :id, :idx =>0}.merge!( options )
+    name = options[:name]
+    namesym = name.to_sym
     
     singleton.module_eval do
       @field_ids ||= {}
       #puts @field_ids
-      name = options[:name]
-      @field_ids[ name.to_sym ] = options[:idx].to_i 
-      define_method( name ) do
-        @field_ids[name.to_sym]
-      end
+      @field_ids[ namesym ] = options[:idx].to_i - 1 
     end
+    eval <<-END
+      def #{name}()
+        read_field( :#{namesym} )
+      end
+
+      def #{name}=(value)
+        write_field( :#{namesym}, value ) 
+      end
+    END
 
   end
 
@@ -249,9 +296,16 @@ class HL7::Message::Segment
 
   def write_field( name, value )
     idx = self.class.field_ids[ name ]
-    raise HL7::Exception.new( "missing field" ) if (idx >= @elements.length)
 
-    @elements[ idx ] = value.first
+    if (idx >= @elements.length)
+      # make some space for the incoming field, missing items are assumed to
+      # be empty, so this is valid per the spec -mg
+      missing = ("," * (idx-@elements.length)).split(',',-1)
+      @elements += missing
+    end
+
+
+    @elements[ idx ] = value
   end
 
   @elements = []
@@ -273,17 +327,61 @@ def Date.to_hl7_long( ruby_date )
 end
 
 class HL7::Message::Segment::MSH < HL7::Message::Segment
-  add_field :name=>:id, :idx=> 1
-  add_field :name=>:application, :idx=> 2
+  segment_weight -1 # the msh should always start a message
+  add_field :name=>:field_sep, :idx=>1
+  add_field :name=>:enc_chars, :idx=>2
+  add_field :name=>:sending_app, :idx=>3
+  add_field :name=>:sending_facility, :idx=>4
+  add_field :name=>:recv_app, :idx=>5
+  add_field :name=>:recv_facility, :idx=>6
+  add_field :name=>:time, :idx=>7
+  add_field :name=>:security, :idx=>8
+  add_field :name=>:message_type, :idx=>9
+  add_field :name=>:message_control_id, :idx=>10
+  add_field :name=>:processing_id, :idx=>11
+  add_field :name=>:version_id, :idx=>12
+  add_field :name=>:seq, :idx=>13
+  add_field :name=>:continue_ptr, :idx=>14
+  add_field :name=>:accept_ack_type, :idx=>15
+  add_field :name=>:app_ack_type, :idx=>16
+  add_field :name=>:country_code, :idx=>17
+  add_field :name=>:charset, :idx=>18
+
+end
+
+class HL7::Message::Segment::MSA < HL7::Message::Segment
+  segment_weight 0 # should occur after the msh segment
+  add_field :name=>:sid, :idx=>1
+  add_field :name=>:ack_code, :idx=>2
+  add_field :name=>:control_id, :idx=>3
+  add_field :name=>:text, :idx=>4
+  add_field :name=>:expected_seq, :idx=>5
+  add_field :name=>:delayed_ack_type, :idx=>6
+  add_field :name=>:error_cond, :idx=>7
 end
 
 class HL7::Message::Segment::EVN < HL7::Message::Segment
+end
+
+class HL7::Message::Segment::PID < HL7::Message::Segment
+  add_field :name=>:set_id, :idx=>1
+  add_field :name=>:patient_id, :idx=>2
+  add_field :name=>:patient_id_list, :idx=>3
+  add_field :name=>:alt_patient_id, :idx=>4
+  add_field :name=>:patient_name, :idx=>5
+  add_field :name=>:mother_maiden_name, :idx=>6
+  add_field :name=>:patient_dob, :idx=>7
 end
 
 class HL7::Message::Segment::PV1 < HL7::Message::Segment
 end
 
 class HL7::Message::Segment::NTE < HL7::Message::Segment
+  segment_weight 4
+  add_field :name=>:set_id, :idx=>1
+  add_field :name=>:source, :idx=>2
+  add_field :name=>:comment, :idx=>3
+  add_field :name=>:comment_type, :idx=>4
 end
 
 class HL7::Message::Segment::ORU < HL7::Message::Segment
@@ -291,7 +389,7 @@ end
 
 class HL7::Message::Segment::Default < HL7::Message::Segment
   # all segments have an order-id 
-  add_field :name=>:id, :idx=> 1
+  add_field :name=>:sid, :idx=> 1
 end
 
 # vim:tw=78:sw=2:ts=2:et:fdm=marker:

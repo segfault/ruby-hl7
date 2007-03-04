@@ -54,20 +54,22 @@ class BasicParsing < Test::Unit::TestCase
   def test_segment_numeric_mutator
     msg = HL7::Message.new
     msg.parse @simple_msh_txt
-    
+    inp = HL7::Message::Segment::Default.new
+    msg[1] = inp
+    assert_equal( inp, msg[1] )
   end
 
   def test_element_accessor
     msg = HL7::Message.new
     msg.parse @simple_msh_txt
-    assert_equal( "LAB1", msg[:MSH].application )
+    assert_equal( "LAB1", msg[:MSH].sending_app )
   end
 
   def test_element_mutator
     msg = HL7::Message.new
     msg.parse @simple_msh_txt
-    msg[:MSH].application = "TEST"
-    assert_equal( "TEST", msg[:MSH].application )
+    msg[:MSH].sending_app = "TEST"
+    assert_equal( "TEST", msg[:MSH].sending_app )
   end
 
   def test_element_missing_accessor
@@ -85,5 +87,20 @@ class BasicParsing < Test::Unit::TestCase
       msg[:MSH].does_not_really_exist_here = "TEST"
     end
   end
-  
+
+  def test_segment_sort
+    msg = HL7::Message.new
+    pv1 = HL7::Message::Segment::PV1.new
+    msg << pv1
+    msh = HL7::Message::Segment::MSH.new
+    msg << msh
+    msh.sending_app = "TEST"
+    
+
+    initial = msg.to_s
+    sorted = msg.sort
+    final = sorted.to_s
+    assert_not_equal( initial, final )
+  end
+
 end
