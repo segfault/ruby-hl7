@@ -124,6 +124,8 @@ class HL7::Message
   end
 
   def to_mllp
+    pre_mllp = to_hl7
+    "\x0b" + pre_mllp + "\x1c\r"
   end
 
   def sequence_segments
@@ -142,13 +144,19 @@ class HL7::Message
 
   private
   def parse_enumerable( inary )
+    #assumes an enumeration of strings....
     inary.each do |oary|
-      parse_string( oary )
+      parse_string( oary.to_s )
     end
   end
 
   def parse_string( instr )
-    ary = instr.split( segment_delim, -1 )
+    post_mllp = instr
+    if /\x0b(.*)\x1c\r/.match( instr )
+      post_mllp = $1
+    end
+
+    ary = post_mllp.split( segment_delim, -1 )
     generate_segments( ary )
   end
 
