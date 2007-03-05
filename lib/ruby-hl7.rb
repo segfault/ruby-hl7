@@ -1,6 +1,6 @@
 # $Id$
 # {{{ Copyright Notice
-# Copyright (c) 2006 Mark Guzman
+# Copyright (c) 2006-2007 Mark Guzman
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -54,17 +54,18 @@ class HL7::Message
   attr :item_delim
   attr :segment_delim
 
-  def initialize
+  def initialize( raw_msg=nil )
     @segments = []
     @segments_by_name = {}
     @item_delim = "^"
     @element_delim = '|' 
     @segment_delim = "\r"
+
+    parse( raw_msg ) if raw_msg
   end
 
   def []( index )
     ret = nil
-    #puts "calling [%s]" % index
 
     if index.kind_of?(Range) || index.kind_of?(Fixnum)
       ret = @segments[ index ]
@@ -85,14 +86,13 @@ class HL7::Message
   end
 
   def <<( value )
-    #raise HL7::Exception.new( "invalid argument to <<" ) if value.kind_of?(HL7::Message::Segment)
     (@segments ||= []) << value
     name = value.class.to_s.gsub("HL7::Message::Segment::", "").to_sym
     (@segments_by_name[ name ] ||= []) << value
+    sequence_segments # let's auto-set the set-id as we go
   end
 
   def self.parse( inobj )
-    #puts "here"
     ret = HL7::Message.new
     ret.parse( inobj )
     ret
@@ -103,14 +103,11 @@ class HL7::Message
       raise HL7::ParseError.new
     end
 
-    #puts "kls: " + inobj.class.to_s
     if inobj.kind_of?(String)
         parse_string( inobj )
     elsif inobj.respond_to?(:each)
         parse_enumerable( inobj )
     end
-
-    #puts "done"
   end
 
   def each
@@ -118,7 +115,7 @@ class HL7::Message
     @segments.each { |s| yield s }
   end
 
-  def to_s    
+  def to_s                         
     @segments.join( '\n' )
   end
 
@@ -129,35 +126,38 @@ class HL7::Message
   def to_mllp
   end
 
+  def sequence_segments
+    last = nil
+    @segments.each do |s|
+      if s.kind_of?( last.class ) && s.respond_to?( :set_id )
+        if (last.set_id == "" || last.set_id == nil)
+          last.set_id = 1
+        end
+        s.set_id = last.set_id.to_i + 1
+      end
+
+      last = s
+    end
+  end
+
   private
   def parse_enumerable( inary )
-    #puts "parsing enumerable"
-    oary = inary.join( "" )
-    parse_string( oary )
-    #inary.each do |elm|
-    #    s
-    #end
+    inary.each do |oary|
+      parse_string( oary )
+    end
   end
 
   def parse_string( instr )
-    #puts "parsing string"
     ary = instr.split( segment_delim, -1 )
     generate_segments( ary )
   end
 
   def generate_segments( ary )
-    #puts "generate_segments"
     raise HL7::ParseError.new unless ary.length > 0
-    #puts "ary.length: %d" % ary.length
 
     ary.each do |elm|
-      #puts "elm: %s" % elm
-      #puts "element delim: %s" % @element_delim
       seg_parts = elm.split( @element_delim, -1 )
       raise HL7::ParseError.new unless seg_parts && (seg_parts.length > 0)
-      #puts "seg parts: %s" % seg_parts.length
-
-      #raise HL7::ParseError.new unless HL7::Message::Segment.constants.index( seg_parts[0] )
 
       seg_name = seg_parts[0]
       begin
@@ -165,12 +165,9 @@ class HL7::Message
       rescue Exception
         # we don't have an implementation for this segment
         # so lets just preserve the data
-        #puts "error: %s" % $!
         kls = HL7::Message::Segment::Default
       end
-      new_seg = kls.new elm
-
-      #puts "seg_parts[0]: %s" % seg_parts[0]
+      new_seg = kls.new( elm )
       @segments << new_seg
 
       # we want to allow segment lookup by name
@@ -192,18 +189,11 @@ class HL7::Message::Segment
     @element_delim = '|'
     @field_total = 0
 
-    if (raw_segment != nil && raw_segment != "")
-      if (raw_segment.kind_of? Array)
-        @elements = raw_segment
-      else
-        @elements = raw_segment.split( element_delim, -1 )
-      end
+    if (raw_segment.kind_of? Array)
+      @elements = raw_segment
     else
-      (@elements ||= []) << self.class.to_s.split( ':' ).last
-      @elements << ""
+      @elements = raw_segment.split( element_delim, -1 )
     end
-    #puts "element count: %d" % @elements.length
-    
   end
 
   def to_info
@@ -219,21 +209,28 @@ class HL7::Message::Segment
     base_sym = base_str.to_sym
 
     if self.class.field_ids.include?( base_sym )
-      if sym.to_s.include?( "=" )
-        write_field( base_sym, args )
-      else
-        read_field( base_sym )
-      end 
+      # base_sym is ok, let's move on
+    elsif /e([0-9]+)/.match( base_str )
+      # base_sym should actually be $1, since we're going by
+      # element id number
+      base_sym = $1.to_i
     else
       super.method_missing( sym, args, blk )  
+    end
+
+    if sym.to_s.include?( "=" )
+      write_field( base_sym, args )
+    else
+      read_field( base_sym )
     end
   end
 
   def <=>( other )
-    #return nil if other.kind_of?(HL7::Message::Segment)
+    return nil unless other.kind_of?(HL7::Message::Segment)
+
     diff = self.weight - other.weight
-    return 1 if diff > 0
-    return -1 if diff < 0
+    return -1 if diff > 0
+    return 1 if diff < 0
     return 0
   end
   
@@ -266,7 +263,6 @@ class HL7::Message::Segment
     
     singleton.module_eval do
       @field_ids ||= {}
-      #puts @field_ids
       @field_ids[ namesym ] = options[:idx].to_i - 1 
     end
     eval <<-END
@@ -288,14 +284,24 @@ class HL7::Message::Segment
   end
 
   def read_field( name )
-    idx = self.class.field_ids[ name ]
+    unless name.kind_of?( Fixnum )
+      idx = self.class.field_ids[ name ] 
+    else
+      idx = name
+    end
     return nil if (idx >= @elements.length) 
 
-    @elements[ idx ]
+    ret = @elements[ idx ]
+    ret = ret.first if (ret.kind_of?(Array) && ret.length == 1)
+    ret
   end
 
   def write_field( name, value )
-    idx = self.class.field_ids[ name ]
+    unless name.kind_of?( Fixnum )
+      idx = self.class.field_ids[ name ] 
+    else
+      idx = name
+    end
 
     if (idx >= @elements.length)
       # make some space for the incoming field, missing items are assumed to
@@ -305,7 +311,7 @@ class HL7::Message::Segment
     end
 
 
-    @elements[ idx ] = value
+    @elements[ idx ] = value.to_s
   end
 
   @elements = []
