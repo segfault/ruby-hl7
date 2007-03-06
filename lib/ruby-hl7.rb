@@ -22,21 +22,26 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # }}} Copyright Notice
 
-# {{{ ri info
+# {{{ rdoc info
 #= ruby-hl7.rb
 #
 # Ruby HL7 is designed to provide a simple, easy to use library for
 # parsing and generating HL7 (2.x) messages.
 #
+#
+# Author::    Mark Guzman  (mailto:segfault@hasno.info)
+# Copyright:: Copyright (c) 2006-2007 Mark Guzman
+# License::   BSD
+#
 #== Example
-# }}} ri info
+# }}} rdoc info
 
 require 'rubygems'
 require "stringio"
 require "date"
 require 'facets/core/class/cattr'
 
-module HL7
+module HL7 # :nodoc:
 end
 
 class HL7::Exception < StandardError
@@ -48,12 +53,17 @@ end
 class HL7::RangeError < HL7::Exception
 end
 
+# Ruby Object representation of an hl7 2.x message
+# the message object is actually a "smart" collection of hl7 segments
 class HL7::Message
   include Enumerable # we treat an hl7 2.x message as a collection of segments
   attr :element_delim
   attr :item_delim
   attr :segment_delim
 
+  # setup a new hl7 message
+  # raw_msg:: is an optional object containing an hl7 message
+  #           it can either be a string or an Enumerable object
   def initialize( raw_msg=nil )
     @segments = []
     @segments_by_name = {}
@@ -64,6 +74,9 @@ class HL7::Message
     parse( raw_msg ) if raw_msg
   end
 
+  # access a segment of the message
+  # index:: can be a Range, Fixnum or anything that
+  #         responds to to_sym
   def []( index )
     ret = nil
 
@@ -77,7 +90,15 @@ class HL7::Message
     ret
   end
 
+  # modify a segment of the message
+  # index:: can be a Range, Fixnum or anything that
+  #         responds to to_sym
+  # value:: an HL7::Message::Segment object
   def []=( index, value )
+    unless ( value && value.kind_of?(HL7::Message::Segment) )
+      raise HL7::Exception.new( "attempting to assign something other than an HL7 Segment" ) 
+    end
+
     if index.kind_of?(Range) || index.kind_of?(Fixnum)
       @segments[ index ] = value
     else
@@ -85,19 +106,28 @@ class HL7::Message
     end
   end
 
+  # add a segment to the message
+  # * will force auto set_id sequencing for segments containing set_id's
   def <<( value )
+    unless ( value && value.kind_of?(HL7::Message::Segment) )
+      raise HL7::Exception.new( "attempting to append something other than an HL7 Segment" ) 
+    end
+
     (@segments ||= []) << value
     name = value.class.to_s.gsub("HL7::Message::Segment::", "").to_sym
     (@segments_by_name[ name ] ||= []) << value
     sequence_segments # let's auto-set the set-id as we go
   end
 
+  # parse a String or Enumerable object into an HL7::Message if possible
+  # * returns a new HL7::Message if successful
   def self.parse( inobj )
     ret = HL7::Message.new
     ret.parse( inobj )
     ret
   end
 
+  # parse the provided String or Enumerable object into this message
   def parse( inobj )
     unless inobj.kind_of?(String) || inobj.respond_to?(:each)
       raise HL7::ParseError.new
@@ -110,24 +140,30 @@ class HL7::Message
     end
   end
 
+  # yield each segment in the message
   def each
     return unless @segments
     @segments.each { |s| yield s }
   end
 
+  # provide a screen-readable version of the message
   def to_s                         
     @segments.join( '\n' )
   end
 
+  # provide a HL7 spec version of the message
   def to_hl7
     @segments.join( @segment_delim )
   end
 
+  # provide the HL7 spec version of the message wrapped in MLLP
   def to_mllp
     pre_mllp = to_hl7
     "\x0b" + pre_mllp + "\x1c\r"
   end
 
+  # auto-set the set_id fields of any message segments that
+  # provide it and have more than one instance in the message
   def sequence_segments
     last = nil
     @segments.each do |s|
@@ -152,8 +188,8 @@ class HL7::Message
 
   def parse_string( instr )
     post_mllp = instr
-    if /\x0b(.*)\x1c\r/.match( instr )
-      post_mllp = $1
+    if /\x0b((:?.|\r|\n)+)\x1c\r/.match( instr )
+      post_mllp = $1 #strip the mllp bytes
     end
 
     ary = post_mllp.split( segment_delim, -1 )
@@ -187,11 +223,18 @@ class HL7::Message
   end
 end                
 
+# Ruby Object representation of an hl7 2.x message segment
+# The segments can be setup to provide aliases to specific fields with
+# optional validation code that is run when the field is modified
+# The segment field data is also accessible via the e<number> method.
 class HL7::Message::Segment
   attr :element_delim
   attr :item_delim
   attr :segment_weight
 
+  # setup a new HL7::Message::Segment
+  # raw_segment:: is an optional String or Array which will be used as the
+  #               segment's field data
   def initialize(raw_segment="")
     @segments_by_name = {}
     @element_delim = '|'
@@ -208,6 +251,7 @@ class HL7::Message::Segment
     "%s: empty segment >> %s" % [ self.class.to_s, @elements.inspect ] 
   end
 
+  # output the HL7 spec version of the segment
   def to_s
     @elements.join( @element_delim )
   end
@@ -242,6 +286,7 @@ class HL7::Message::Segment
     return 0
   end
   
+  # get the defined sort-weight of this segment class
   def weight
     self.class.weight
   end
@@ -251,6 +296,9 @@ class HL7::Message::Segment
     class << self; self end
   end
 
+
+  # set the segment's sort-weight
+  # * this is used when sort is called to automatically order the segments
   def self.segment_weight( my_weight )
     singleton.module_eval do
       @my_weight = my_weight
@@ -264,8 +312,14 @@ class HL7::Message::Segment
     end
   end
 
-  def self.add_field( options={} )
-    options = {:name => :id, :idx =>0}.merge!( options )
+  # define a field alias 
+  # * options is a hash of parameters 
+  #   * :name is the alias itself (required)
+  #   * :id is the field number to reference (required)
+  #   * :blk is a validation proc (optional, overrides the second argument)
+  # * blk is an optional validation proc
+  def self.add_field( options={}, &blk )
+    options = {:name => :id, :idx =>0, :blk =>blk}.merge!( options )
     name = options[:name]
     namesym = name.to_sym
     
@@ -323,7 +377,6 @@ class HL7::Message::Segment
   end
 
   @elements = []
-  @field_ids = {}
 
 
 end
@@ -401,9 +454,17 @@ end
 class HL7::Message::Segment::ORU < HL7::Message::Segment
 end
 
+class HL7::Message::Segment::OBR < HL7::Message::Segment
+  add_field :name=>:set_id, :idx=> 1
+end
+
+class HL7::Message::Segment::OBX < HL7::Message::Segment
+  add_field :name=>:set_id, :idx=> 1
+end
+
 class HL7::Message::Segment::Default < HL7::Message::Segment
   # all segments have an order-id 
-  add_field :name=>:sid, :idx=> 1
+  add_field :name=>:set_id, :idx=> 1
 end
 
 # vim:tw=78:sw=2:ts=2:et:fdm=marker:
