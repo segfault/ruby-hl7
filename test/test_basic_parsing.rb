@@ -166,6 +166,7 @@ class BasicParsing < Test::Unit::TestCase
 
   def test_enumerable_parsing
     test_file = open( './test_data/test.hl7' )
+    assert_not_nil( test_file )
 
     msg = HL7::Message.new( test_file )
     assert_equal( @simple_msh_txt, msg.to_hl7 )
@@ -182,5 +183,41 @@ class BasicParsing < Test::Unit::TestCase
     assert_equal( inp, nte.to_s )
   end
 
+  def test_mllp_output
+    msg = HL7::Message.new( @simple_msh_txt )
+    expect = "\x0b%s\x1c\r" % msg.to_hl7
+    assert_equal( expect, msg.to_mllp )
+  end
+
+  def test_parse_mllp
+    raw = "\x0b%s\x1c\r" % @simple_msh_txt
+    msg = HL7::Message.parse( raw )
+    assert_not_nil( msg )
+    assert_equal( @simple_msh_txt, msg.to_hl7 )
+    assert_equal( raw, msg.to_mllp )
+  end
+
+  def test_mllp_output_parse
+    msg = HL7::Message.parse( @simple_msh_txt )
+    assert_not_nil( msg )
+    assert_nothing_raised do
+      post_mllp = HL7::Message.parse( msg.to_mllp )
+      assert_not_nil( post_mllp )
+      assert_equal( msg.to_hl7, post_mllp.to_hl7 )
+    end
+  end
+
+  def test_grouped_sequenced_segments
+    #multible obr's with multiple obx's
+    msg = HL7::Message.parse( @simple_msh_txt )
+    (1..10).each do |obr_id|
+      obr = HL7::Message::Segment::OBR.new
+      msg << obr
+      (1..10).each do |obx_id|
+        obx = HL7::Message::Segment::OBX.new
+        msg << obx
+      end
+    end
+  end
 
 end
