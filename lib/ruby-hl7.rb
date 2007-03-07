@@ -244,6 +244,10 @@ class HL7::Message::Segment
       @elements = raw_segment
     else
       @elements = raw_segment.split( element_delim, -1 )
+      if raw_segment == ""
+        @elements[0] = self.class.to_s.split( "::" ).last 
+        @elements << ""
+      end
     end
   end
 
@@ -256,6 +260,8 @@ class HL7::Message::Segment
     @elements.join( @element_delim )
   end
 
+  # handle the e<number> field accessor
+  # and any aliases that didn't get added to the system automatically
   def method_missing( sym, *args, &blk )
     base_str = sym.to_s.gsub( "=", "" )
     base_sym = base_str.to_sym
@@ -277,7 +283,7 @@ class HL7::Message::Segment
     end
   end
 
-  def <=>( other )
+  def <=>( other ) 
     return nil unless other.kind_of?(HL7::Message::Segment)
 
     diff = self.weight - other.weight
@@ -287,29 +293,70 @@ class HL7::Message::Segment
   end
   
   # get the defined sort-weight of this segment class
+  # an alias for self.weight
   def weight
     self.class.weight
   end
 
   private
-  def self.singleton
+  def self.singleton #:nodoc:
     class << self; self end
   end
 
 
-  # set the segment's sort-weight
-  # * this is used when sort is called to automatically order the segments
-  def self.segment_weight( my_weight )
-    singleton.module_eval do
-      @my_weight = my_weight
+  # DSL element to define a segment's sort weight
+  # returns the segment's current weight by default
+  # segments are sorted ascending
+  def self.weight(new_weight=nil)
+    if new_weight
+      singleton.module_eval do
+        @my_weight = new_weight
+      end
     end
-  end
 
-  def self.weight
     singleton.module_eval do
       return 999 unless @my_weight
       @my_weight
     end
+  end
+
+
+  # allows a segment to store other segment objects
+  # used to handle associated lists like one OBR to many OBX segments
+  def self.has_children
+    self.class_eval do
+      define_method(:children) do
+        unless @my_children
+          @my_children ||= []
+          @my_children.instance_eval do
+            alias :old_append :<<
+
+            def <<(value)
+              unless (value && value.kind_of?(HL7::Message::Segment))
+                raise HL7::Exception.new( "attempting to append non-segment to a segment list" )
+              end
+        
+              old_append( value )
+            end
+          end
+        end
+
+        @my_children
+      end
+
+      alias :my_to_s :to_s
+      define_method(:to_s) do
+        out = my_to_s
+        if @my_children
+          @my_children.each do |seg|
+            out << '\r'
+            out << seg.to_s
+          end
+        end
+        out
+      end
+    end
+      
   end
 
   # define a field alias 
@@ -325,9 +372,10 @@ class HL7::Message::Segment
     
     singleton.module_eval do
       @field_ids ||= {}
-      @field_ids[ namesym ] = options[:idx].to_i - 1 
+      @field_ids[ namesym ] = options[:idx].to_i  
     end
-    eval <<-END
+
+    self.class_eval <<-END
       def #{name}()
         read_field( :#{namesym} )
       end
@@ -339,13 +387,13 @@ class HL7::Message::Segment
 
   end
 
-  def self.field_ids
+  def self.field_ids #:nodoc:
     singleton.module_eval do
       @field_ids
     end
   end
 
-  def read_field( name )
+  def read_field( name ) #:nodoc:
     unless name.kind_of?( Fixnum )
       idx = self.class.field_ids[ name ] 
     else
@@ -358,7 +406,7 @@ class HL7::Message::Segment
     ret
   end
 
-  def write_field( name, value )
+  def write_field( name, value ) #:nodoc:
     unless name.kind_of?( Fixnum )
       idx = self.class.field_ids[ name ] 
     else
@@ -394,30 +442,29 @@ def Date.to_hl7_long( ruby_date )
 end
 
 class HL7::Message::Segment::MSH < HL7::Message::Segment
-  segment_weight -1 # the msh should always start a message
-  add_field :name=>:field_sep, :idx=>1
-  add_field :name=>:enc_chars, :idx=>2
-  add_field :name=>:sending_app, :idx=>3
-  add_field :name=>:sending_facility, :idx=>4
-  add_field :name=>:recv_app, :idx=>5
-  add_field :name=>:recv_facility, :idx=>6
-  add_field :name=>:time, :idx=>7
-  add_field :name=>:security, :idx=>8
-  add_field :name=>:message_type, :idx=>9
-  add_field :name=>:message_control_id, :idx=>10
-  add_field :name=>:processing_id, :idx=>11
-  add_field :name=>:version_id, :idx=>12
-  add_field :name=>:seq, :idx=>13
-  add_field :name=>:continue_ptr, :idx=>14
-  add_field :name=>:accept_ack_type, :idx=>15
-  add_field :name=>:app_ack_type, :idx=>16
-  add_field :name=>:country_code, :idx=>17
-  add_field :name=>:charset, :idx=>18
+  weight -1 # the msh should always start a message
+  add_field :name=>:enc_chars, :idx=>1
+  add_field :name=>:sending_app, :idx=>2
+  add_field :name=>:sending_facility, :idx=>3
+  add_field :name=>:recv_app, :idx=>4
+  add_field :name=>:recv_facility, :idx=>5
+  add_field :name=>:time, :idx=>6
+  add_field :name=>:security, :idx=>7
+  add_field :name=>:message_type, :idx=>8
+  add_field :name=>:message_control_id, :idx=>9
+  add_field :name=>:processing_id, :idx=>10
+  add_field :name=>:version_id, :idx=>11
+  add_field :name=>:seq, :idx=>12
+  add_field :name=>:continue_ptr, :idx=>13
+  add_field :name=>:accept_ack_type, :idx=>14
+  add_field :name=>:app_ack_type, :idx=>15
+  add_field :name=>:country_code, :idx=>16
+  add_field :name=>:charset, :idx=>17
 
 end
 
 class HL7::Message::Segment::MSA < HL7::Message::Segment
-  segment_weight 0 # should occur after the msh segment
+  weight 0 # should occur after the msh segment
   add_field :name=>:sid, :idx=>1
   add_field :name=>:ack_code, :idx=>2
   add_field :name=>:control_id, :idx=>3
@@ -444,7 +491,7 @@ class HL7::Message::Segment::PV1 < HL7::Message::Segment
 end
 
 class HL7::Message::Segment::NTE < HL7::Message::Segment
-  segment_weight 4
+  weight 4
   add_field :name=>:set_id, :idx=>1
   add_field :name=>:source, :idx=>2
   add_field :name=>:comment, :idx=>3
@@ -456,6 +503,7 @@ end
 
 class HL7::Message::Segment::OBR < HL7::Message::Segment
   add_field :name=>:set_id, :idx=> 1
+  has_children
 end
 
 class HL7::Message::Segment::OBX < HL7::Message::Segment
