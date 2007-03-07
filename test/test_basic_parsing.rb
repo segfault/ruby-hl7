@@ -67,6 +67,10 @@ class BasicParsing < Test::Unit::TestCase
     inp = HL7::Message::Segment::Default.new
     msg[1] = inp
     assert_equal( inp, msg[1] )
+
+    assert_raise( HL7::Exception ) do
+      msg[2] = Class.new
+    end
   end
 
   def test_segment_string_mutator
@@ -75,6 +79,10 @@ class BasicParsing < Test::Unit::TestCase
     inp = HL7::Message::Segment::NTE.new
     msg["NTE"] = inp
     assert_equal( inp, msg["NTE"] )
+
+    assert_raise( HL7::Exception ) do
+      msg["NTE"] = Class.new
+    end
   end
 
   def test_segment_symbol_accessor
@@ -83,6 +91,10 @@ class BasicParsing < Test::Unit::TestCase
     inp = HL7::Message::Segment::NTE.new
     msg[:NTE] = inp
     assert_equal( inp, msg[:NTE] )
+
+    assert_raise( HL7::Exception ) do
+      msg[:NTE] = Class.new
+    end
   end
 
   def test_element_accessor
@@ -126,6 +138,19 @@ class BasicParsing < Test::Unit::TestCase
     msg[:MSH].e2 = "TESTING1234"
     assert_equal( "TESTING1234", msg[:MSH].e2 )
   end
+
+  def test_segment_append
+    msg = HL7::Message.new
+    assert_nothing_raised do
+      msg << HL7::Message::Segment::MSH.new
+      msg << HL7::Message::Segment::NTE.new
+    end
+
+    assert_raises( HL7::Exception ) do
+      msg << Class.new
+    end
+  end
+
 
   def test_segment_sort
     msg = HL7::Message.new
@@ -207,17 +232,46 @@ class BasicParsing < Test::Unit::TestCase
     end
   end
 
+  def test_child_segment_accessor
+    obr = HL7::Message::Segment::OBR.new
+    assert_nothing_raised do
+      assert_not_nil( obr.children )
+      assert_equal( 0, obr.children.length )
+    end
+  end
+
+  def test_child_segment_addition
+    obr = HL7::Message::Segment::OBR.new
+    assert_nothing_raised do
+      assert_equal( 0, obr.children.length )
+      (1..5).each do |x|
+        obr.children << HL7::Message::Segment::OBX.new
+        assert_equal( x, obr.children.length )
+      end
+    end
+  end
+
   def test_grouped_sequenced_segments
     #multible obr's with multiple obx's
     msg = HL7::Message.parse( @simple_msh_txt )
+    orig_output = msg.to_hl7
     (1..10).each do |obr_id|
       obr = HL7::Message::Segment::OBR.new
       msg << obr
       (1..10).each do |obx_id|
         obx = HL7::Message::Segment::OBX.new
-        msg << obx
+        obr.children << obx
       end
     end
+
+    assert_not_nil( msg[:OBR] )
+    assert_equal( 11, msg[:OBR].length )
+    assert_not_nil( msg[:OBX] )
+    assert_equal( 2, msg[:OBX].length ) 
+
+    final_output = msg.to_hl7
+    assert_not_equal( orig_output, final_output )
+    puts msg.to_s
   end
 
 end
