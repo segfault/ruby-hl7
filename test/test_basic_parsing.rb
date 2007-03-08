@@ -251,6 +251,13 @@ class BasicParsing < Test::Unit::TestCase
     end
   end
 
+  def test_child_segment_invalid_addition
+    obr = HL7::Message::Segment::OBR.new
+    assert_raises(HL7::Exception) do
+      obr.children << Class.new
+    end
+  end
+
   def test_grouped_sequenced_segments
     #multible obr's with multiple obx's
     msg = HL7::Message.parse( @simple_msh_txt )
@@ -268,10 +275,11 @@ class BasicParsing < Test::Unit::TestCase
     assert_equal( 11, msg[:OBR].length )
     assert_not_nil( msg[:OBX] )
     assert_equal( 2, msg[:OBX].length ) 
+    assert_equal( "2", msg[:OBR][4].children[1].set_id ) # confirm the id's
+    assert_equal( "2", msg[:OBR][5].children[1].set_id ) # confirm the id's
 
     final_output = msg.to_hl7
     assert_not_equal( orig_output, final_output )
-    puts msg.to_s
   end
 
 end

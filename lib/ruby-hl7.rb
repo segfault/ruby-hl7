@@ -164,14 +164,21 @@ class HL7::Message
 
   # auto-set the set_id fields of any message segments that
   # provide it and have more than one instance in the message
-  def sequence_segments
+  def sequence_segments(base=nil)
     last = nil
-    @segments.each do |s|
+    segs = @segments
+    segs = base.children if base
+
+    segs.each do |s|
       if s.kind_of?( last.class ) && s.respond_to?( :set_id )
         if (last.set_id == "" || last.set_id == nil)
           last.set_id = 1
         end
         s.set_id = last.set_id.to_i + 1
+      end
+
+      if s.respond_to?(:children)
+        sequence_segments( s )
       end
 
       last = s
@@ -511,8 +518,6 @@ class HL7::Message::Segment::OBX < HL7::Message::Segment
 end
 
 class HL7::Message::Segment::Default < HL7::Message::Segment
-  # all segments have an order-id 
-  add_field :name=>:set_id, :idx=> 1
 end
 
 # vim:tw=78:sw=2:ts=2:et:fdm=marker:
