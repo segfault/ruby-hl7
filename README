@@ -1,7 +1,7 @@
 =Ruby HL7 Library README
 
 A simple way to parse and create hl7 2.x messages with ruby.
+Examples can be found in ruby-hl7.rb
 
-
-Copyright (c) 2006-2007 Mark Guzman
-$Id$
+ Copyright (c) 2006-2007 Mark Guzman
+ $Id$

@@ -20,8 +20,13 @@ namespace :test do
     system("#{rcov} --html test/test*.rb")
     system("open coverage/index.html") if PLATFORM['darwin']
   end
-
+  
+  desc 'Heckle the tests'
+  task :heckle do
+    system("heckle HL7::Message")
+  end
 end
+
 
 Rake::RDocTask.new do |rd|
   rd.main = "README"
@@ -30,12 +35,12 @@ end
 
 spec = Gem::Specification.new do |s| 
   s.name = "Ruby-HL7"
-  s.version = "0.0.1"
+  s.version = "0.1.0"
   s.author = "Mark Guzman"
   s.email = "segfault@hasno.info"
   s.homepage = "http://hasno.info"
   s.platform = Gem::Platform::RUBY
-  s.summary = "Ruyb HL7 Library"
+  s.summary = "Ruby HL7 Library"
   s.files = FileList["{bin,lib,test_data}/**/*"].to_a
   s.require_path = "lib"
   s.autorequire = "ruby-hl7"
