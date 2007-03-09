@@ -1,8 +1,17 @@
 #= ruby-hl7.rb
+#Ruby HL7 is designed to provide a simple, easy to use library for
+#parsing and generating HL7 (2.x) messages.
+#
+#
+#Author:    Mark Guzman  (mailto:segfault@hasno.info)  
+#
+#Copyright: (c) 2006-2007 Mark Guzman  
+#
+#License:   BSD  
+#
 # $Id$
 # 
-# {{{ License
-#
+#== License
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -22,20 +31,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
-# }}} License
-# 
-#
-# {{{ rdoc info
-#
-#
-# Ruby HL7 is designed to provide a simple, easy to use library for
-# parsing and generating HL7 (2.x) messages.
-#
-#
-# Author:    Mark Guzman  (mailto:segfault@hasno.info)
-# Copyright: Copyright (c) 2006-2007 Mark Guzman
-# License:   BSD
-#
 #== Examples
 #
 #==== Creating a new HL7 message
@@ -57,16 +52,14 @@
 #
 # puts msg.to_mllp # mllp version of the message (as a string)
 #
-#</tt>
 #==== Parse an existing HL7 message 
-#<tt>
+#
 # raw_input = open( "my_hl7_msg.txt" ).readlines
 # msg = HL7::Message.new( raw_input )
 # 
 # puts "message type: %s" % msg[:MSH].message_type 
-#</tt>
 #
-# }}} rdoc info
+#
 
 require 'rubygems'
 require "stringio"
@@ -76,12 +69,15 @@ require 'facets/core/class/cattr'
 module HL7 # :nodoc:
 end
 
+# Encapsulate HL7 specific exceptions
 class HL7::Exception < StandardError
 end
 
+# Parsing failed
 class HL7::ParseError < HL7::Exception
 end
 
+# Attempting to use an invalid indice
 class HL7::RangeError < HL7::Exception
 end
 
@@ -401,13 +397,19 @@ class HL7::Message::Segment
   # define a field alias 
   # * options is a hash of parameters 
   #   * :name is the alias itself (required)
-  #   * :id is the field number to reference (required)
+  #   * :id is the field number to reference (optional, auto-increments from 1
+  #      by default)
   #   * :blk is a validation proc (optional, overrides the second argument)
   # * blk is an optional validation proc
-  def self.add_field( options={}, &blk )
-    options = {:name => :id, :idx =>0, :blk =>blk}.merge!( options )
+  def self.add_field( options={}, &blk ) 
+    options = {:name => :id, :idx =>-1, :blk =>blk}.merge!( options )
     name = options[:name]
     namesym = name.to_sym
+    @field_cnt ||= 1
+    if options[:idx] == -1
+      options[:idx] = @field_cnt # provide default auto-incrementing
+    end
+    @field_cnt = options[:idx].to_i + 1
     
     singleton.module_eval do
       @field_ids ||= {}
@@ -423,7 +425,6 @@ class HL7::Message::Segment
         write_field( :#{namesym}, value ) 
       end
     END
-
   end
 
   def self.field_ids #:nodoc:
@@ -480,76 +481,10 @@ end
 def Date.to_hl7_long( ruby_date )
 end
 
-class HL7::Message::Segment::MSH < HL7::Message::Segment
-  weight -1 # the msh should always start a message
-  add_field :name=>:enc_chars, :idx=>1
-  add_field :name=>:sending_app, :idx=>2
-  add_field :name=>:sending_facility, :idx=>3
-  add_field :name=>:recv_app, :idx=>4
-  add_field :name=>:recv_facility, :idx=>5
-  add_field :name=>:time, :idx=>6
-  add_field :name=>:security, :idx=>7
-  add_field :name=>:message_type, :idx=>8
-  add_field :name=>:message_control_id, :idx=>9
-  add_field :name=>:processing_id, :idx=>10
-  add_field :name=>:version_id, :idx=>11
-  add_field :name=>:seq, :idx=>12
-  add_field :name=>:continue_ptr, :idx=>13
-  add_field :name=>:accept_ack_type, :idx=>14
-  add_field :name=>:app_ack_type, :idx=>15
-  add_field :name=>:country_code, :idx=>16
-  add_field :name=>:charset, :idx=>17
-
-end
-
-class HL7::Message::Segment::MSA < HL7::Message::Segment
-  weight 0 # should occur after the msh segment
-  add_field :name=>:sid, :idx=>1
-  add_field :name=>:ack_code, :idx=>2
-  add_field :name=>:control_id, :idx=>3
-  add_field :name=>:text, :idx=>4
-  add_field :name=>:expected_seq, :idx=>5
-  add_field :name=>:delayed_ack_type, :idx=>6
-  add_field :name=>:error_cond, :idx=>7
-end
-
-class HL7::Message::Segment::EVN < HL7::Message::Segment
-end
-
-class HL7::Message::Segment::PID < HL7::Message::Segment
-  add_field :name=>:set_id, :idx=>1
-  add_field :name=>:patient_id, :idx=>2
-  add_field :name=>:patient_id_list, :idx=>3
-  add_field :name=>:alt_patient_id, :idx=>4
-  add_field :name=>:patient_name, :idx=>5
-  add_field :name=>:mother_maiden_name, :idx=>6
-  add_field :name=>:patient_dob, :idx=>7
-end
-
-class HL7::Message::Segment::PV1 < HL7::Message::Segment
-end
-
-class HL7::Message::Segment::NTE < HL7::Message::Segment
-  weight 4
-  add_field :name=>:set_id, :idx=>1
-  add_field :name=>:source, :idx=>2
-  add_field :name=>:comment, :idx=>3
-  add_field :name=>:comment_type, :idx=>4
-end
-
-class HL7::Message::Segment::ORU < HL7::Message::Segment
-end
-
-class HL7::Message::Segment::OBR < HL7::Message::Segment
-  add_field :name=>:set_id, :idx=> 1
-  has_children
-end
-
-class HL7::Message::Segment::OBX < HL7::Message::Segment
-  add_field :name=>:set_id, :idx=> 1
-end
-
 class HL7::Message::Segment::Default < HL7::Message::Segment
 end
+
+# load our segments
+Dir["#{File.dirname(__FILE__)}/segments/*.rb"].each { |ext| load ext }
 
 # vim:tw=78:sw=2:ts=2:et:fdm=marker:
