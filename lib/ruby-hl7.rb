@@ -1,6 +1,7 @@
+#= ruby-hl7.rb
 # $Id$
-# {{{ Copyright Notice
-# Copyright (c) 2006-2007 Mark Guzman
+# 
+# {{{ License
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -20,20 +21,51 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# }}} Copyright Notice
-
+# 
+# }}} License
+# 
+#
 # {{{ rdoc info
-#= ruby-hl7.rb
+#
 #
 # Ruby HL7 is designed to provide a simple, easy to use library for
 # parsing and generating HL7 (2.x) messages.
 #
 #
-# Author::    Mark Guzman  (mailto:segfault@hasno.info)
-# Copyright:: Copyright (c) 2006-2007 Mark Guzman
-# License::   BSD
+# Author:    Mark Guzman  (mailto:segfault@hasno.info)
+# Copyright: Copyright (c) 2006-2007 Mark Guzman
+# License:   BSD
 #
-#== Example
+#== Examples
+#
+#==== Creating a new HL7 message
+#
+# # create a message
+# msg = HL7::Message.new
+#
+# # create a MSH segment for our new message
+# msh = HL7::Message::Segment::MSH.new
+# msh.recv_app = "ruby hl7"
+# msh.recv_facility = "my office"
+# msh.processing_id = rand(10000).to_s
+# 
+# msg << msh # add the MSH segment to the message
+# 
+# puts msg.to_s # readable version of the message
+#
+# puts msg.to_hl7 # hl7 version of the message (as a string)
+#
+# puts msg.to_mllp # mllp version of the message (as a string)
+#
+#</tt>
+#==== Parse an existing HL7 message 
+#<tt>
+# raw_input = open( "my_hl7_msg.txt" ).readlines
+# msg = HL7::Message.new( raw_input )
+# 
+# puts "message type: %s" % msg[:MSH].message_type 
+#</tt>
+#
 # }}} rdoc info
 
 require 'rubygems'
@@ -141,7 +173,7 @@ class HL7::Message
   end
 
   # yield each segment in the message
-  def each
+  def each # :yeilds: segment
     return unless @segments
     @segments.each { |s| yield s }
   end

@@ -1,8 +1,7 @@
-$Id$
-
-Ruby HL7 Library
-----------------
+=Ruby HL7 Library README
 
 A simple way to parse and create hl7 2.x messages with ruby.
 
-Copyright 2006-2007 Mark Guzman
+
+Copyright (c) 2006-2007 Mark Guzman
+$Id$
