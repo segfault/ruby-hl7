@@ -1,4 +1,57 @@
 # $Id$
 require 'ruby-hl7'
 class HL7::Message::Segment::PV1 < HL7::Message::Segment
+  weight 2
+  add_field :name=>:set_id
+  add_field :name=>:patient_class
+  add_field :name=>:assigned_location
+  add_field :name=>:admission_type
+  add_field :name=>:preadmit_number
+  add_field :name=>:prior_location
+  add_field :name=>:attending_doctor
+  add_field :name=>:referring_doctor
+  add_field :name=>:consulting_doctor
+  add_field :name=>:hospital_service
+  add_field :name=>:temporary_location
+  add_field :name=>:preadmit_indicator
+  add_field :name=>:readmit_indicator
+  add_field :name=>:admit_source
+  add_field :name=>:ambulatory_status
+  add_field :name=>:vip_indicator
+  add_field :name=>:admitting_doctor
+  add_field :name=>:patient_type
+  add_field :name=>:visit_number
+  add_field :name=>:financial_class
+  add_field :name=>:charge_price_indicator
+  add_field :name=>:courtesy_code
+  add_field :name=>:credit_rating
+  add_field :name=>:contract_code
+  add_field :name=>:contract_effective_date
+  add_field :name=>:contract_amount
+  add_field :name=>:contract_period
+  add_field :name=>:interest_code
+  add_field :name=>:transfer_bad_debt_code
+  add_field :name=>:transfer_bad_debt_date
+  add_field :name=>:bad_debt_agency_code
+  add_field :name=>:bad_debt_transfer_amount
+  add_field :name=>:bad_debt_recovery_amount
+  add_field :name=>:delete_account_indicator
+  add_field :name=>:delete_account_date
+  add_field :name=>:discharge_disposition
+  add_field :name=>:discharge_to_location
+  add_field :name=>:diet_type
+  add_field :name=>:servicing_facility
+  add_field :name=>:bed_status
+  add_field :name=>:account_status
+  add_field :name=>:pending_location
+  add_field :name=>:prior_temporary_location
+  add_field :name=>:admit_date
+  add_field :name=>:discharge_date
+  add_field :name=>:current_patient_balance
+  add_field :name=>:total_charges
+  add_field :name=>:total_adjustments
+  add_field :name=>:total_payments
+  add_field :name=>:alternate_visit_id
+  add_field :name=>:visit_indicator
+  add_field :name=>:other_healthcare_provider
 end
