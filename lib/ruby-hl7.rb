@@ -81,6 +81,10 @@ end
 class HL7::RangeError < HL7::Exception
 end
 
+# Attempting to assign invalid data to a field
+class HL7::InvalidDataError < HL7::Exception
+end
+
 # Ruby Object representation of an hl7 2.x message
 # the message object is actually a "smart" collection of hl7 segments
 class HL7::Message

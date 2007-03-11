@@ -1,0 +1,53 @@
+# $Id$
+require 'ruby-hl7'
+class HL7::Message::Segment::PV2 < HL7::Message::Segment
+  weight 3
+  add_field :name=>:prior_pending_location
+  add_field :name=>:accommodation_code
+  add_field :name=>:admit_reason
+  add_field :name=>:transfer_reason
+  add_field :name=>:patient_valuables
+  add_field :name=>:patient_valuables_location
+  add_field :name=>:visit_user_code
+  add_field :name=>:expected_admit_date
+  add_field :name=>:expected_discharge_date
+  add_field :name=>:estimated_inpatient_stay_length
+  add_field :name=>:actual_inpatient_stay_length
+  add_field :name=>:visit_description
+  add_field :name=>:referral_source_code
+  add_field :name=>:previous_service_date
+  add_field :name=>:employment_illness_related_indicator
+  add_field :name=>:purge_status_code
+  add_field :name=>:purge_status_date
+  add_field :name=>:special_program_code
+  add_field :name=>:retention_indicator
+  add_field :name=>:expected_number_of_insurance_plans
+  add_field :name=>:visit_publicity_code
+  add_field :name=>:visit_protection_indicator
+  add_field :name=>:clinic_organization_name
+  add_field :name=>:patient_status_code
+  add_field :name=>:visit_priority_code
+  add_field :name=>:previous_treatment_date
+  add_field :name=>:expected_discharge_disposition
+  add_field :name=>:signature_on_file
+  add_field :name=>:first_similar_illness_date
+  add_field :name=>:patient_charge_adjustment_code
+  add_field :name=>:recurring_service_code
+  add_field :name=>:billing_media_code
+  add_field :name=>:expected_surgery_date
+  add_field :name=>:military_partnership_code
+  add_field :name=>:military_non_availibility_code
+  add_field :name=>:newborn_baby_indicator
+  add_field :name=>:baby_detained_indicator
+  add_field :name=>:mode_of_arrival_code
+  add_field :name=>:recreational_drug_use_code
+  add_field :name=>:precaution_code
+  add_field :name=>:patient_condition_code
+  add_field :name=>:living_will_code
+  add_field :name=>:organ_donor_code
+  add_field :name=>:advance_directive_code
+  add_field :name=>:patient_status_effective_date
+  add_field :name=>:expected_loa_return_date
+  add_field :name=>:expected_preadmission_testing_date
+  add_field :name=>:notify_clergy_code
+end
