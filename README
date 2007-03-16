@@ -3,5 +3,20 @@
 A simple way to parse and create hl7 2.x messages with ruby.
 Examples can be found in lib/ruby-hl7.rb
 
+* Bug tracking: http://trac.hasno.info/ruby-hl7
+* Subversion: svn://hasno.info/ruby-hl7
+* Docs: http://ruby-hl7.rubyforge.org
+* Lists
+  * Developers: mailto:ruby-hl7-devel@rubyforge.org
+  * Users: mailto:ruby-hl7-users@rubyforge.org
+
  Copyright (c) 2006-2007 Mark Guzman
  $Id$
+
+== Download and Installation
+Install the gem using the following command:
+ gem install ruby-hl7                 
+
+
+== License
+ see the LICENSE file

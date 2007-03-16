@@ -1,64 +1,18 @@
 #= ruby-hl7.rb
-#Ruby HL7 is designed to provide a simple, easy to use library for
-#parsing and generating HL7 (2.x) messages.
+# Ruby HL7 is designed to provide a simple, easy to use library for
+# parsing and generating HL7 (2.x) messages.
 #
 #
-#Author:    Mark Guzman  (mailto:segfault@hasno.info)  
+# Author:    Mark Guzman  (mailto:segfault@hasno.info)  
 #
-#Copyright: (c) 2006-2007 Mark Guzman  
+# Copyright: (c) 2006-2007 Mark Guzman  
 #
-#License:   BSD  
+# License:   BSD  
 #
-# $Id$
+#  $Id$
 # 
-#== License
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# 
-#== Examples
-#
-#==== Creating a new HL7 message
-#
-# # create a message
-# msg = HL7::Message.new
-#
-# # create a MSH segment for our new message
-# msh = HL7::Message::Segment::MSH.new
-# msh.recv_app = "ruby hl7"
-# msh.recv_facility = "my office"
-# msh.processing_id = rand(10000).to_s
-# 
-# msg << msh # add the MSH segment to the message
-# 
-# puts msg.to_s # readable version of the message
-#
-# puts msg.to_hl7 # hl7 version of the message (as a string)
-#
-# puts msg.to_mllp # mllp version of the message (as a string)
-#
-#==== Parse an existing HL7 message 
-#
-# raw_input = open( "my_hl7_msg.txt" ).readlines
-# msg = HL7::Message.new( raw_input )
-# 
-# puts "message type: %s" % msg[:MSH].message_type 
-#
+# == License
+# see the LICENSE file 
 #
 
 require 'rubygems'
@@ -87,6 +41,35 @@ end
 
 # Ruby Object representation of an hl7 2.x message
 # the message object is actually a "smart" collection of hl7 segments
+# == Examples
+# 
+# ==== Creating a new HL7 message
+# 
+#  # create a message
+#  msg = HL7::Message.new
+# 
+#  # create a MSH segment for our new message
+#  msh = HL7::Message::Segment::MSH.new
+#  msh.recv_app = "ruby hl7"
+#  msh.recv_facility = "my office"
+#  msh.processing_id = rand(10000).to_s
+#  
+#  msg << msh # add the MSH segment to the message
+#  
+#  puts msg.to_s # readable version of the message
+# 
+#  puts msg.to_hl7 # hl7 version of the message (as a string)
+# 
+#  puts msg.to_mllp # mllp version of the message (as a string)
+# 
+# ==== Parse an existing HL7 message 
+# 
+#  raw_input = open( "my_hl7_msg.txt" ).readlines
+#  msg = HL7::Message.new( raw_input )
+#  
+#  puts "message type: %s" % msg[:MSH].message_type 
+#
+#
 class HL7::Message
   include Enumerable # we treat an hl7 2.x message as a collection of segments
   attr :element_delim
@@ -299,6 +282,9 @@ class HL7::Message::Segment
     @elements.join( @element_delim )
   end
 
+  # at the segment level there is no difference between to_s and to_hl7
+  alias :to_hl7 :to_s
+
   # handle the e<number> field accessor
   # and any aliases that didn't get added to the system automatically
   def method_missing( sym, *args, &blk )
@@ -433,7 +419,7 @@ class HL7::Message::Segment
 
   def self.field_ids #:nodoc:
     singleton.module_eval do
-      @field_ids
+      (@field_ids ||= [])
     end
   end
 
@@ -473,6 +459,7 @@ class HL7::Message::Segment
 
 end
 
+# parse an hl7 formatted date
 def Date.from_hl7( hl7_date )
 end
 
@@ -485,7 +472,20 @@ end
 def Date.to_hl7_long( ruby_date )
 end
 
+# Provide a catch-all information preserving segment
+# * no aliases are not provided BUT you can use the numeric element accessor
+# 
+#  seg = HL7::Message::Segment::Default.new
+#  seg.e0 = "NK1"
+#  seg.e1 = "SOMETHING ELSE"
+#  seg.e2 = "KIN HERE"
+#
 class HL7::Message::Segment::Default < HL7::Message::Segment
+  def initialize(raw_segment="")
+    segs = [] if (raw_segment == "")
+    segs ||= raw_segment 
+    super( segs )
+  end
 end
 
 # load our segments
