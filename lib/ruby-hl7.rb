@@ -121,6 +121,17 @@ class HL7::Message
     end
   end
 
+  # return the index of the value if it exists, nil otherwise
+  # value:: is expected to be a string
+  def index( value )
+    return nil unless (value && value.respond_to?(:to_sym))
+    
+    segs = @segments_by_name[ value.to_sym ]
+    return nil unless segs
+
+    @segments.index( segs.to_a.first )
+  end
+
   # add a segment to the message
   # * will force auto set_id sequencing for segments containing set_id's
   def <<( value )
@@ -291,7 +302,7 @@ class HL7::Message::Segment
     base_str = sym.to_s.gsub( "=", "" )
     base_sym = base_str.to_sym
 
-    if self.class.field_ids.include?( base_sym )
+    if self.class.fields.include?( base_sym )
       # base_sym is ok, let's move on
     elsif /e([0-9]+)/.match( base_str )
       # base_sym should actually be $1, since we're going by
@@ -390,7 +401,9 @@ class HL7::Message::Segment
   #   * :id is the field number to reference (optional, auto-increments from 1
   #      by default)
   #   * :blk is a validation proc (optional, overrides the second argument)
-  # * blk is an optional validation proc
+  # * blk is an optional validation proc which MUST take a parameter
+  #   and always return a value for the field (it will be used on read/write
+  #   calls)
   def self.add_field( options={}, &blk ) 
     options = {:name => :id, :idx =>-1, :blk =>blk}.merge!( options )
     name = options[:name]
@@ -402,8 +415,8 @@ class HL7::Message::Segment
     @field_cnt = options[:idx].to_i + 1
     
     singleton.module_eval do
-      @field_ids ||= {}
-      @field_ids[ namesym ] = options[:idx].to_i  
+      @fields ||= {}
+      @fields[ namesym ] = options  
     end
 
     self.class_eval <<-END
@@ -417,31 +430,38 @@ class HL7::Message::Segment
     END
   end
 
-  def self.field_ids #:nodoc:
+  def self.fields #:nodoc:
     singleton.module_eval do
-      (@field_ids ||= [])
+      (@fields ||= [])
     end
   end
 
-  def read_field( name ) #:nodoc:
+  def field_info( name ) #:nodoc:
+    field_blk = nil
+    idx = name # assume we've gotten a fixnum
     unless name.kind_of?( Fixnum )
-      idx = self.class.field_ids[ name ] 
-    else
-      idx = name
+      fld_info = self.class.fields[ name ]
+      idx = fld_info[:idx].to_i
+      field_blk = fld_info[:blk]
     end
+
+    [ idx, field_blk ]
+  end
+
+  def read_field( name ) #:nodoc:
+    idx, field_blk = field_info( name )
+    return nil unless idx
     return nil if (idx >= @elements.length) 
 
     ret = @elements[ idx ]
     ret = ret.first if (ret.kind_of?(Array) && ret.length == 1)
+    ret = field_blk.call( ret ) if field_blk
     ret
   end
 
   def write_field( name, value ) #:nodoc:
-    unless name.kind_of?( Fixnum )
-      idx = self.class.field_ids[ name ] 
-    else
-      idx = name
-    end
+    idx, field_blk = field_info( name )
+    return nil unless idx
 
     if (idx >= @elements.length)
       # make some space for the incoming field, missing items are assumed to
@@ -450,7 +470,7 @@ class HL7::Message::Segment
       @elements += missing
     end
 
-
+    value = field_blk.call( value ) if field_blk
     @elements[ idx ] = value.to_s
   end
 
@@ -460,17 +480,17 @@ class HL7::Message::Segment
 end
 
 # parse an hl7 formatted date
-def Date.from_hl7( hl7_date )
-end
+#def Date.from_hl7( hl7_date )
+#end
 
-def Date.to_hl7_short( ruby_date )
-end
+#def Date.to_hl7_short( ruby_date )
+#end
 
-def Date.to_hl7_med( ruby_date )
-end
+#def Date.to_hl7_med( ruby_date )
+#end
 
-def Date.to_hl7_long( ruby_date )
-end
+#def Date.to_hl7_long( ruby_date )
+#end
 
 # Provide a catch-all information preserving segment
 # * no aliases are not provided BUT you can use the numeric element accessor

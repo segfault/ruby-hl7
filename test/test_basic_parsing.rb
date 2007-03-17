@@ -282,4 +282,25 @@ class BasicParsing < Test::Unit::TestCase
     assert_not_equal( orig_output, final_output )
   end
 
+  def test_index_accessor
+    msg = HL7::Message.parse( @simple_msh_txt )
+    assert_equal( 1, msg.index( "PID" ) )
+    assert_equal( 1, msg.index( :PID ) )
+    assert_equal( 2, msg.index( "PV1" ) )
+    assert_equal( 2, msg.index( :PV1 ) )
+    assert_equal( nil, msg.index( "TACOBELL" ) )
+    assert_equal( nil, msg.index( nil ) )
+    assert_equal( nil, msg.index( 1 ) )
+  end
+
+  def test_segment_field_block
+    pid = HL7::Message::Segment::PID.new
+    assert_raises( HL7::InvalidDataError ) do
+      pid.admin_sex = "TEST"
+    end
+    assert_nothing_raised do
+      pid.admin_sex = "F"
+    end
+  end
+
 end
