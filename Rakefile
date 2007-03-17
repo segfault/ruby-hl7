@@ -5,6 +5,9 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/packagetask'
 require 'rake/gempackagetask'
+$: << './lib'
+require 'ruby-hl7'
+
 
 Rake::TestTask.new do |t|
   t.test_files = FileList[ 'test/test*.rb' ]
@@ -27,7 +30,6 @@ namespace :test do
   end
 end
 
-
 Rake::RDocTask.new do |rd|
   rd.main = "README"
   rd.rdoc_files.include("README", "LICENSE", "lib/**/*.rb")
@@ -35,10 +37,10 @@ end
 
 spec = Gem::Specification.new do |s| 
   s.name = "Ruby-HL7"
-  s.version = "0.1.0"
+  s.version = HL7::VERSION
   s.author = "Mark Guzman"
   s.email = "segfault@hasno.info"
-  s.homepage = "http://hasno.info"
+  s.homepage = "http://rubyforge.org/ruby-hl7"
   s.platform = Gem::Platform::RUBY
   s.summary = "Ruby HL7 Library"
   s.files = FileList["{bin,lib,test_data}/**/*"].to_a
@@ -46,7 +48,7 @@ spec = Gem::Specification.new do |s|
   s.autorequire = "ruby-hl7"
   s.test_files = FileList["{test}/**/test*.rb"].to_a
   s.has_rdoc = true
-  s.extra_rdoc_files = ["README"]
+  s.extra_rdoc_files = %w[README LICENSE]
   s.add_dependency("facets", ">= 0.0.0")
 end
  
