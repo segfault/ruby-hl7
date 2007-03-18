@@ -11,23 +11,26 @@ require 'rubyforge'
 
 $: << './lib'
 require 'ruby-hl7'
-
+full_name = "Ruby-HL7"
+short_name = full_name.downcase
+             
 # Many of these tasks were garnered from zenspider's Hoe
 # just forced to work my way
 
 spec = Gem::Specification.new do |s| 
-  s.name = "Ruby-HL7"
+  s.name = short_name
+  s.full_name
   s.version = HL7::VERSION
   s.author = "Mark Guzman"
   s.email = "segfault@hasno.info"
   s.homepage = "http://rubyforge.org/ruby-hl7"
   s.platform = Gem::Platform::RUBY
   s.summary = "Ruby HL7 Library"
-  s.rubyforge_project = "ruby-hl7"
+  s.rubyforge_project = short_name
   s.description = "A simple library to parse and generate HL7 2.x messages"
   s.files = FileList["{bin,lib,test_data}/**/*"].to_a
   s.require_path = "lib"
-  s.autorequire = "ruby-hl7"
+  s.autorequire = short_name
   s.test_files = FileList["{test}/**/test*.rb"].to_a
   s.has_rdoc = true
   s.extra_rdoc_files = %w[README LICENSE]
@@ -72,7 +75,7 @@ end
 Rake::RDocTask.new do |rd|
   rd.main = "README"
   rd.rdoc_files.include("README", "LICENSE", "lib/**/*.rb")
-  rd.title = "%s (%s) Documentation" % [ spec.name, spec.version ]
+  rd.title = "%s (%s) Documentation" % [ full_name, spec.version ]
   rd.rdoc_dir = 'doc'
 end
 
@@ -113,7 +116,7 @@ task :release => [:clean, :package] do |t|
   puts "Logging in"
   rf.login
 
-  changes = open("NOTES").readlines if File.exists?("NOTES")
+  changes = open("NOTES").readlines.join('\r') if File.exists?("NOTES")
   c = rf.userconfig
   c["release_notes"] = spec.description if spec.description
   c["release_changes"] = changes if changes
@@ -122,7 +125,7 @@ task :release => [:clean, :package] do |t|
   files = ["#{pkg}.tgz", "#{pkg}.gem"].compact
 
   puts "Releasing #{spec.name} v. #{spec.version}"
-  rf.add_release spec.rubyforge_project, spec.name, spec.version, *files
+  rf.add_release spec.rubyforge_project, spec.name, spec.version.to_s, *files
 end
 
 desc 'Install the package as a gem'
