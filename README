@@ -1,7 +1,8 @@
 =Ruby HL7 Library README
 
 A simple way to parse and create hl7 2.x messages with ruby.
-Examples can be found in lib/ruby-hl7.rb
+Examples can be found in HL7::Message
+The version id can be found in the HL7::VERSION constant.
 
 * Bug tracking: http://trac.hasno.info/ruby-hl7
 * Subversion: svn://hasno.info/ruby-hl7

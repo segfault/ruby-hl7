@@ -21,7 +21,7 @@ require "date"
 require 'facets/core/class/cattr'
 
 module HL7 # :nodoc:
-  VERSION = "0.1.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\$$/, '')
+  VERSION = "0.1.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
 end
 
 # Encapsulate HL7 specific exceptions
@@ -261,6 +261,20 @@ end
 # The segments can be setup to provide aliases to specific fields with
 # optional validation code that is run when the field is modified
 # The segment field data is also accessible via the e<number> method.
+#
+# == Defining a New Segment
+#  class HL7::Message::Segment::NK1 < HL7::Message::Segment
+#    wieght 100 # segments are sorted ascendingly
+#    add_field :name=>:something_you_want       # assumes :idx=>1
+#    add_field :name=>:something_else, :idx=>6  # :idx=>6 and field count=6
+#    add_field :name=>:something_more           # :idx=>7
+#    add_field :name=>:block_example do |value|
+#      raise HL7::InvalidDataError.new unless value.to_i < 100 && value.to_i > 10
+#      return value
+#    end 
+#    # this block will be executed when seg.block_example= is called
+#    # and when seg.block_example is called
+#      
 class HL7::Message::Segment
   attr :element_delim
   attr :item_delim
