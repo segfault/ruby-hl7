@@ -15,7 +15,6 @@ require 'ruby-hl7'
 # Many of these tasks were garnered from zenspider's Hoe
 # just forced to work my way
 
-
 spec = Gem::Specification.new do |s| 
   s.name = "Ruby-HL7"
   s.version = HL7::VERSION
@@ -114,6 +113,7 @@ task :release => [:clean, :package] do |t|
   puts "Logging in"
   rf.login
 
+  changes = open("NOTES").readlines if File.exists?("NOTES")
   c = rf.userconfig
   c["release_notes"] = spec.description if spec.description
   c["release_changes"] = changes if changes
