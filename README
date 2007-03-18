@@ -5,8 +5,9 @@ Examples can be found in HL7::Message
 The version id can be found in the HL7::VERSION constant.
 
 * Bug tracking: http://trac.hasno.info/ruby-hl7
-* Subversion: svn://hasno.info/ruby-hl7
-* Docs: http://ruby-hl7.rubyforge.org
+* Subversion:   svn://hasno.info/ruby-hl7
+* Docs:         http://ruby-hl7.rubyforge.org
+* Rubyforge:    http://rubyforge.org/projects/ruby-hl7
 * Lists
   * Developers: mailto:ruby-hl7-devel@rubyforge.org
   * Users: mailto:ruby-hl7-users@rubyforge.org
