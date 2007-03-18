@@ -101,7 +101,7 @@ end
 desc 'Package and upload the release to rubyforge.'
 task :release => [:clean, :package] do |t|
   v = ENV["VERSION"] or abort "Must supply VERSION=x.y.z"
-  abort "Versions don't match #{v} vs #{spec.version}" if v != spec.version
+  abort "Versions don't match '#{v}' vs '#{spec.version}'" if v != spec.version.to_s
   pkg = "pkg/#{spec.name}-#{spec.version}"
 
   if $DEBUG then
