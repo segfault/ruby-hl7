@@ -19,6 +19,7 @@ require 'rubygems'
 require "stringio"
 require "date"
 require 'facets/core/class/cattr'
+require 'facets/core/proc/bind'
 
 module HL7 # :nodoc:
   VERSION = "0.1.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
@@ -80,7 +81,7 @@ class HL7::Message
   # setup a new hl7 message
   # raw_msg:: is an optional object containing an hl7 message
   #           it can either be a string or an Enumerable object
-  def initialize( raw_msg=nil )
+  def initialize( raw_msg=nil, &blk )
     @segments = []
     @segments_by_name = {}
     @item_delim = "^"
@@ -88,6 +89,10 @@ class HL7::Message
     @segment_delim = "\r"
 
     parse( raw_msg ) if raw_msg
+
+    if block_given?
+      blk.call
+    end
   end
 
   # access a segment of the message
@@ -283,7 +288,7 @@ class HL7::Message::Segment
   # setup a new HL7::Message::Segment
   # raw_segment:: is an optional String or Array which will be used as the
   #               segment's field data
-  def initialize(raw_segment="")
+  def initialize(raw_segment="", &blk)
     @segments_by_name = {}
     @element_delim = '|'
     @field_total = 0
@@ -296,6 +301,27 @@ class HL7::Message::Segment
         @elements[0] = self.class.to_s.split( "::" ).last 
         @elements << ""
       end
+    end
+
+    if block_given?
+      callctx = eval( "self", blk )
+      def callctx.__seg__(val=nil)
+        @__seg_val__ ||= val
+      end
+      callctx.__seg__(self)
+      # TODO: find out if this pollutes the calling namespace permanently...
+      
+      to_do = <<-END
+      def method_missing( sym, *args, &blk )
+        __seg__.send( sym, args, blk )  
+      end
+      END
+
+      eval( to_do, blk )
+      yield self 
+      eval( "undef method_missing", blk )
+      #eval( "undef __seg__", blk )
+      #eval( "remove_instance_variable '@__seg_val__'", blk )
     end
   end
 
@@ -330,7 +356,13 @@ class HL7::Message::Segment
     if sym.to_s.include?( "=" )
       write_field( base_sym, args )
     else
-      read_field( base_sym )
+
+      if args.length > 0
+        write_field( base_sym, args )
+      else
+        read_field( base_sym )
+      end
+
     end
   end
 
@@ -435,8 +467,13 @@ class HL7::Message::Segment
     end
 
     self.class_eval <<-END
-      def #{name}()
-        read_field( :#{namesym} )
+      def #{name}(val=nil)
+        unless val
+          read_field( :#{namesym} )
+        else
+          write_field( :#{namesym}, val )
+          val # this matches existing n= method functionality
+        end
       end
 
       def #{name}=(value)
