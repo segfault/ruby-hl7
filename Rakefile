@@ -17,6 +17,9 @@ short_name = full_name.downcase
 # Many of these tasks were garnered from zenspider's Hoe
 # just forced to work my way
 
+desc 'Default: run unit tests.'
+task :default => :test
+
 spec = Gem::Specification.new do |s| 
   s.name = short_name
   s.full_name
@@ -116,7 +119,7 @@ task :release => [:clean, :package] do |t|
   puts "Logging in"
   rf.login
 
-  changes = open("NOTES").readlines.join('\r') if File.exists?("NOTES")
+  changes = open("NOTES").readlines.join("") if File.exists?("NOTES")
   c = rf.userconfig
   c["release_notes"] = spec.description if spec.description
   c["release_changes"] = changes if changes
