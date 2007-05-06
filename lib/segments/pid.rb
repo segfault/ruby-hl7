@@ -10,7 +10,7 @@ class HL7::Message::Segment::PID < HL7::Message::Segment
   add_field :name=>:mother_maiden_name
   add_field :name=>:patient_dob
   add_field :name=>:admin_sex do |sex|
-    unless /^[FMOUAN]$/.match(sex) || sex == nil
+    unless /^[FMOUAN]$/.match(sex) || sex == nil || sex == ""
       raise HL7::InvalidDataError.new( "bad administrative sex value (not F|M|O|U|A|N)" )
     end
     sex = "" unless sex

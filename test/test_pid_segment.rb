@@ -15,6 +15,7 @@ class PidSegment < Test::Unit::TestCase
       vals.each do |x|
         pid.admin_sex = x
       end
+      pid.admin_sex = ""
     end
 
     assert_raises( HL7::InvalidDataError ) do
