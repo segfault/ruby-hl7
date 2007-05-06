@@ -73,6 +73,14 @@ class BasicParsing < Test::Unit::TestCase
     end
   end
 
+  def test_segment_missing_accessor
+    msg = HL7::Message.new
+    msg.parse @simple_msh_txt
+    assert_nothing_raised do
+      assert_equal( nil, msg[:does_not_exist] )
+    end
+  end
+
   def test_segment_string_mutator
     msg = HL7::Message.new
     msg.parse @simple_msh_txt

@@ -105,7 +105,7 @@ class HL7::Message
       ret = @segments[ index ]
     elsif (index.respond_to? :to_sym)
       ret = @segments_by_name[ index.to_sym ]
-      ret = ret.first if ret.length == 1
+      ret = ret.first if ret && ret.length == 1
     end
 
     ret
