@@ -6,6 +6,8 @@ require 'ruby-hl7'
 class BasicParsing < Test::Unit::TestCase
   def setup
     @simple_msh_txt = open( './test_data/test.hl7' ).readlines.first
+    @empty_txt = open( './test_data/empty.hl7' ).readlines.first
+    @empty_segments_txt = open( './test_data/empty_segments.hl7' ).readlines.first
     @base_msh = "MSH|^~\\&|LAB1||DESTINATION||19910127105114||ORU^R03|LAB1003929"
   end
 
@@ -29,6 +31,10 @@ class BasicParsing < Test::Unit::TestCase
     assert_raise( HL7::ParseError ) do
       msg = HL7::Message.parse( :MSHthis_shouldnt_parse_at_all )
     end
+  end
+
+  def test_parse_empty
+    msg = HL7::Message.new @empty_txt
   end
 
   def test_message_to_string
@@ -309,6 +315,11 @@ class BasicParsing < Test::Unit::TestCase
     assert_nothing_raised do
       pid.admin_sex = "F"
     end
+  end
+
+  def test_empty_segment
+    msg = HL7::Message.new @empty_segments_txt
+
   end
 
 end
