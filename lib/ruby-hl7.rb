@@ -254,9 +254,11 @@ class HL7::Message
       @segments << new_seg
 
       # we want to allow segment lookup by name
-      seg_sym = seg_name.to_sym
-      @segments_by_name[ seg_sym ] ||= []
-      @segments_by_name[ seg_sym ] << new_seg
+      if seg_name && (seg_name.strip.length > 0)
+        seg_sym = seg_name.to_sym
+        @segments_by_name[ seg_sym ] ||= []
+        @segments_by_name[ seg_sym ] << new_seg
+      end
     end
 
   end
