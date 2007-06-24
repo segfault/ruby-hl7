@@ -80,7 +80,7 @@ desc "Task for cruise Control"
 task :cruise => ["test","test:coverage"] do
   out = ENV['CC_BUILD_ARTIFACTS']
   return unless out
-  system "mv coverage/* #{out}/"
+  system "mv coverage/* #{out}/coverage_report"
 end
 
 
