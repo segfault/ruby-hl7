@@ -75,6 +75,15 @@ namespace :test do
   end
 end
 
+
+desc "Task for cruise Control"
+task :cruise => ["test","test:coverage"] do
+  out = ENV['CC_BUILD_ARTIFACTS']
+  return unless out
+  system "mv coverage/* #{out}/"
+end
+
+
 Rake::RDocTask.new do |rd|
   rd.main = "README"
   rd.rdoc_files.include("README", "LICENSE", "lib/**/*.rb")
