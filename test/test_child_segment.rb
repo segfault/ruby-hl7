@@ -14,6 +14,7 @@ class ChildSegment < Test::Unit::TestCase
     assert_not_nil msg[:OBR]
     assert_equal( 3, msg[:OBR].length ) 
     assert_not_nil msg[:OBR].first.children
+    assert_equal( 5, msg[:OBR].first.children.length )
 
     msg[:OBR].first.children.each do |x|
       assert_not_nil x

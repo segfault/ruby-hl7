@@ -40,7 +40,7 @@ class BasicParsing < Test::Unit::TestCase
   def test_message_to_string
     msg = HL7::Message.new
     msg.parse @simple_msh_txt
-    orig = @simple_msh_txt.gsub( /\r/, '\n' )
+    orig = @simple_msh_txt.gsub( /\r/, "\n" )
     assert_equal( orig, msg.to_s )
   end
 

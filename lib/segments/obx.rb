@@ -2,6 +2,7 @@
 require 'ruby-hl7'
 class HL7::Message::Segment::OBX < HL7::Message::Segment
   weight 90
+  has_children [:NTE]
   add_field :name=>:set_id
   add_field :name=>:value_type
   add_field :name=>:observation_id
