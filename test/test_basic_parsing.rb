@@ -276,6 +276,7 @@ class BasicParsing < Test::Unit::TestCase
     #multible obr's with multiple obx's
     msg = HL7::Message.parse( @simple_msh_txt )
     orig_output = msg.to_hl7
+    orig_obx_cnt = msg[:OBX].length
     (1..10).each do |obr_id|
       obr = HL7::Message::Segment::OBR.new
       msg << obr
@@ -288,7 +289,7 @@ class BasicParsing < Test::Unit::TestCase
     assert_not_nil( msg[:OBR] )
     assert_equal( 11, msg[:OBR].length )
     assert_not_nil( msg[:OBX] )
-    assert_equal( 2, msg[:OBX].length ) 
+    assert_equal( 102, msg[:OBX].length ) 
     assert_equal( "2", msg[:OBR][4].children[1].set_id ) # confirm the id's
     assert_equal( "2", msg[:OBR][5].children[1].set_id ) # confirm the id's
 

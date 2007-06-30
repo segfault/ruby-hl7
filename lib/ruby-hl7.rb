@@ -128,7 +128,7 @@ class HL7::Message
       raise HL7::Exception.new( "attempting to use an indice that is not a Range, Fixnum or to_sym providing object" )
     end
 
-    value.parent = self
+    value.segment_parent = self
   end
 
   # return the index of the value if it exists, nil otherwise
@@ -149,11 +149,11 @@ class HL7::Message
       raise HL7::Exception.new( "attempting to append something other than an HL7 Segment" ) 
     end
 
-    value.parent = self unless value.parent && value.parent == self # this limits us to two levels.
+    value.segment_parent = self unless value.segment_parent
     (@segments ||= []) << value
     name = value.class.to_s.gsub("HL7::Message::Segment::", "").to_sym
     (@segments_by_name[ name ] ||= []) << value
-    sequence_segments # let's auto-set the set-id as we go
+    sequence_segments unless @parsing # let's auto-set the set-id as we go
   end
 
   # parse a String or Enumerable object into an HL7::Message if possible
@@ -182,10 +182,17 @@ class HL7::Message
     return unless @segments
     @segments.each { |s| yield s }
   end
+  
+  # return the segment count
+  def length
+    0 unless @segments
+    @segments.length
+  end
 
   # provide a screen-readable version of the message
   def to_s    
-    @segments.join( "\n" )                               
+    segs = @segments.collect { |s| s if s.to_s.length > 0 }
+    segs.join( "\n" )                               
   end
 
   # provide a HL7 spec version of the message
@@ -244,10 +251,12 @@ class HL7::Message
   def generate_segments( ary )
     raise HL7::ParseError.new unless ary.length > 0
 
+    @parsing = true
     last_seg = nil
     ary.each do |elm|
       last_seg = generate_segment( elm, last_seg )
     end
+    @parsing = nil
   end
 
   def generate_segment( elm, last_seg )
@@ -263,14 +272,14 @@ class HL7::Message
         kls = HL7::Message::Segment::Default
       end
       new_seg = kls.new( elm )
-      ret = new_seg
-
+      new_seg.segment_parent = self
+      
       if last_seg && last_seg.respond_to?(:children) && last_seg.accepts?( seg_name )
         last_seg.children << new_seg
-        new_seg.is_child = true
-        ret = last_seg
+        new_seg.is_child_segment = true
+        return last_seg
       end
-
+        
       @segments << new_seg
 
       # we want to allow segment lookup by name
@@ -280,7 +289,7 @@ class HL7::Message
         @segments_by_name[ seg_sym ] << new_seg
       end
 
-      ret 
+      new_seg 
   end
 end                
 
@@ -303,7 +312,7 @@ end
 #    # and when seg.block_example is called
 #      
 class HL7::Message::Segment
-  attr :parent, true
+  attr :segment_parent, true
   attr :element_delim
   attr :item_delim
   attr :segment_weight
@@ -408,13 +417,13 @@ class HL7::Message::Segment
 
 
   # return true if the segment has a parent 
-  def is_child?
-    (@is_child ||= false)
+  def is_child_segment?
+    (@is_child_segment ||= false)
   end
 
   # indicate whether or not the segment has a parent
-  def is_child=(val)
-    @is_child = val
+  def is_child_segment=(val)
+    @is_child_segment = val
   end
 
   # get the length of the segment (number of fields it contains)
@@ -468,7 +477,12 @@ class HL7::Message::Segment
                 raise HL7::Exception.new( "attempting to append non-segment to a segment list" )
               end
 
-              value.parent = self 
+              value.segment_parent = @parental
+              k = @parental
+              while (k && k.segment_parent && !k.segment_parent.kind_of?(HL7::Message))
+                k = k.segment_parent
+              end
+              k.segment_parent << value if k && k.segment_parent
               old_append( value )
             end
           end
