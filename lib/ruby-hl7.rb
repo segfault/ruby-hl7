@@ -264,9 +264,9 @@ class HL7::Message
       raise HL7::ParseError.new unless seg_parts && (seg_parts.length > 0)
 
       seg_name = seg_parts[0]
-      begin
+      if HL7::Message::Segment.constants.index(seg_name) # do we have an implementation?
         kls = eval("HL7::Message::Segment::%s" % seg_name)
-      rescue Exception
+      else
         # we don't have an implementation for this segment
         # so lets just preserve the data
         kls = HL7::Message::Segment::Default
