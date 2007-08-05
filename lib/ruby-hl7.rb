@@ -22,7 +22,7 @@ require 'facets/core/class/cattr'
 require 'facets/core/proc/bind'
 
 module HL7 # :nodoc:
-  VERSION = "0.1.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
+  VERSION = "0.2.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
 end
 
 # Encapsulate HL7 specific exceptions
