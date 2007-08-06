@@ -1,4 +1,7 @@
 $Id$
-== Ruby-HL7 v0.1.23 Release Notes
- Initial public release, please see the 
- README for information about the project.
+== Ruby-HL7 v0.2.44 Release Notes
+ Changes:
+   * Various bug fixes regarding segment access
+   * Speed increase/fix when dealing with unimplemented segments
+   * Related/Child segment access simplification ala (myobr.children would return all associated OBX segments)
+
