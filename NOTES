@@ -1,7 +1,5 @@
 $Id$
-== Ruby-HL7 v0.2.44 Release Notes
+== Ruby-HL7 v0.2.51 Release Notes
  Changes:
-   * Various bug fixes regarding segment access
-   * Speed increase/fix when dealing with unimplemented segments
-   * Related/Child segment access simplification ala (myobr.children would return all associated OBX segments)
+   * Updated to support facets >= 2.0
 
