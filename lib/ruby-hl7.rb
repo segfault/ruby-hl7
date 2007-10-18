@@ -18,8 +18,8 @@
 require 'rubygems'
 require "stringio"
 require "date"
-require 'facets/core/class/cattr'
-require 'facets/core/proc/bind'
+require 'facets/module/cattr'
+require 'facets/proc/bind'
 
 module HL7 # :nodoc:
   VERSION = "0.2.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
