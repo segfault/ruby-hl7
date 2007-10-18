@@ -37,7 +37,7 @@ spec = Gem::Specification.new do |s|
   s.test_files = FileList["{test}/**/test*.rb"].to_a
   s.has_rdoc = true
   s.extra_rdoc_files = %w[README LICENSE]
-  s.add_dependency("facets", ">= 1.8.51")
+  s.add_dependency("facets", ">= 2.0")
   s.add_dependency("rake", ">= #{RAKEVERSION}")
   s.add_dependency("rubyforge", ">= #{::RubyForge::VERSION}")
 end
