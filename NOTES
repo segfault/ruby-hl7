@@ -1,5 +1,5 @@
 $Id$
-== Ruby-HL7 v0.2.53 Release Notes
+== Ruby-HL7 v0.2.50 Release Notes
  Changes:
    * Updated to support facets >= 2.0
 
