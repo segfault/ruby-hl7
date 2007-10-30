@@ -348,8 +348,6 @@ class HL7::Message::Segment
       eval( to_do, blk )
       yield self 
       eval( "undef method_missing", blk )
-      #eval( "undef __seg__", blk )
-      #eval( "remove_instance_variable '@__seg_val__'", blk )
     end
   end
 
