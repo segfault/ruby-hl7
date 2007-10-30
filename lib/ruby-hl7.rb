@@ -18,8 +18,7 @@
 require 'rubygems'
 require "stringio"
 require "date"
-require 'facets/module/cattr'
-require 'facets/proc/bind'
+require 'facets'
 
 module HL7 # :nodoc:
   VERSION = "0.2.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
@@ -159,9 +158,9 @@ class HL7::Message
   # parse a String or Enumerable object into an HL7::Message if possible
   # * returns a new HL7::Message if successful
   def self.parse( inobj )
-    ret = HL7::Message.new
-    ret.parse( inobj )
-    ret
+    returning( HL7::Message.new ) do |msg| 
+      msg.parse( inobj ) 
+    end  
   end
 
   # parse the provided String or Enumerable object into this message
@@ -191,14 +190,12 @@ class HL7::Message
 
   # provide a screen-readable version of the message
   def to_s    
-    segs = @segments.collect { |s| s if s.to_s.length > 0 }
-    segs.join( "\n" )                               
+    @segments.collect { |s| s if s.to_s.length > 0 }.join( "\n" )                               
   end
 
   # provide a HL7 spec version of the message
   def to_hl7
-    segs = @segments.collect { |s| s if s.to_s.length > 0 }
-    segs.join( @segment_delim ) 
+    @segments.collect { |s| s if s.to_s.length > 0 }.join( @segment_delim ) 
   end
 
   # provide the HL7 spec version of the message wrapped in MLLP
@@ -216,9 +213,7 @@ class HL7::Message
 
     segs.each do |s|
       if s.kind_of?( last.class ) && s.respond_to?( :set_id )
-        if (last.set_id == "" || last.set_id == nil)
-          last.set_id = 1
-        end
+        last.set_id = 1 if last.set_id.blank?
         s.set_id = last.set_id.to_i + 1
       end
 
@@ -301,10 +296,10 @@ end
 # == Defining a New Segment
 #  class HL7::Message::Segment::NK1 < HL7::Message::Segment
 #    wieght 100 # segments are sorted ascendingly
-#    add_field :name=>:something_you_want       # assumes :idx=>1
-#    add_field :name=>:something_else, :idx=>6  # :idx=>6 and field count=6
-#    add_field :name=>:something_more           # :idx=>7
-#    add_field :name=>:block_example do |value|
+#    add_field :something_you_want       # assumes :idx=>1
+#    add_field :something_else, :idx=>6  # :idx=>6 and field count=6
+#    add_field :something_more           # :idx=>7
+#    add_field :block_example do |value|
 #      raise HL7::InvalidDataError.new unless value.to_i < 100 && value.to_i > 10
 #      return value
 #    end 
@@ -499,17 +494,17 @@ class HL7::Message::Segment
   end 
 
   # define a field alias 
+  # * name is the alias itself (required)
   # * options is a hash of parameters 
-  #   * :name is the alias itself (required)
   #   * :id is the field number to reference (optional, auto-increments from 1
   #      by default)
   #   * :blk is a validation proc (optional, overrides the second argument)
   # * blk is an optional validation proc which MUST take a parameter
   #   and always return a value for the field (it will be used on read/write
   #   calls)
-  def self.add_field( options={}, &blk ) 
-    options = {:name => :id, :idx =>-1, :blk =>blk}.merge!( options )
-    name = options[:name]
+  def self.add_field( name, options={}, &blk ) 
+    options = { :idx =>-1, :blk =>blk}.merge!( options )
+    name ||= :id
     namesym = name.to_sym
     @field_cnt ||= 1
     if options[:idx] == -1
