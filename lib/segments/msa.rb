@@ -2,11 +2,11 @@
 require 'ruby-hl7'
 class HL7::Message::Segment::MSA < HL7::Message::Segment
   weight 0 # should occur after the msh segment
-  add_field :name=>:ack_code
-  add_field :name=>:control_id
-  add_field :name=>:text
-  add_field :name=>:expected_seq
-  add_field :name=>:delayed_ack_type
-  add_field :name=>:error_cond
+  add_field :ack_code
+  add_field :control_id
+  add_field :text
+  add_field :expected_seq
+  add_field :delayed_ack_type
+  add_field :error_cond
 end
 
