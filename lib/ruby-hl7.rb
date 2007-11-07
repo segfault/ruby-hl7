@@ -18,7 +18,7 @@
 require 'rubygems'
 require "stringio"
 require "date"
-require 'facets'
+require "active_support"
 
 module HL7 # :nodoc:
   VERSION = "0.2.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
@@ -376,7 +376,7 @@ class HL7::Message::Segment
       # element id number
       base_sym = $1.to_i
     else
-      super.method_missing( sym, args, blk )  
+      super
     end
 
     if sym.to_s.include?( "=" )
@@ -396,6 +396,7 @@ class HL7::Message::Segment
   def <=>( other ) 
     return nil unless other.kind_of?(HL7::Message::Segment)
 
+    # per Comparable docs: http://www.ruby-doc.org/core/classes/Comparable.html
     diff = self.weight - other.weight
     return -1 if diff > 0
     return 1 if diff < 0
