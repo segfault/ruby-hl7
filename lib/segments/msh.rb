@@ -1,7 +1,7 @@
 # $Id$
 require 'ruby-hl7'
 class HL7::Message::Segment::MSH < HL7::Message::Segment
-  weight -1 # the msh should always start a message
+  weight( -1 ) # the msh should always start a message
   add_field :enc_chars, :idx=>1
   add_field :sending_app, :idx=>2
   add_field :sending_facility, :idx=>3
