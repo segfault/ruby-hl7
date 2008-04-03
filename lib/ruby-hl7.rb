@@ -18,10 +18,13 @@
 require 'rubygems'
 require "stringio"
 require "date"
-require "active_support"
+#require "active_support"
 
 module HL7 # :nodoc:
-  VERSION = "0.2.%s" % "$Rev$".gsub(/\$Rev:\s+/, '').gsub(/\s*\$$/, '')
+  VERSION = "0.3" 
+  def self.ParserConfig
+    @parser_cfg ||= { :empty_segment_is_error => true }
+  end
 end
 
 # Encapsulate HL7 specific exceptions
@@ -158,7 +161,7 @@ class HL7::Message
   # parse a String or Enumerable object into an HL7::Message if possible
   # * returns a new HL7::Message if successful
   def self.parse( inobj )
-    returning( HL7::Message.new ) do |msg| 
+    HL7::Message.new do |msg| 
       msg.parse( inobj ) 
     end  
   end
@@ -213,7 +216,7 @@ class HL7::Message
 
     segs.each do |s|
       if s.kind_of?( last.class ) && s.respond_to?( :set_id )
-        last.set_id = 1 if last.set_id.blank?
+        last.set_id = 1 unless last.set_id && last.set_id.to_i > 0
         s.set_id = last.set_id.to_i + 1
       end
 
@@ -249,14 +252,18 @@ class HL7::Message
     @parsing = true
     last_seg = nil
     ary.each do |elm|
-      last_seg = generate_segment( elm, last_seg )
+      last_seg = generate_segment( elm, last_seg ) || last_seg
     end
     @parsing = nil
   end
 
   def generate_segment( elm, last_seg )
       seg_parts = elm.split( @element_delim, -1 )
-      raise HL7::ParseError.new unless seg_parts && (seg_parts.length > 0)
+      unless seg_parts && (seg_parts.length > 0)
+        raise HL7::ParseError.new if HL7.ParserConfig[:empty_segment_is_error] || false
+        return nil
+      end
+      
 
       seg_name = seg_parts[0]
       if HL7::Message::Segment.constants.index(seg_name) # do we have an implementation?
