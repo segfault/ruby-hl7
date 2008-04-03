@@ -6,14 +6,14 @@ The version id can be found in the HL7::VERSION constant.
 
 * Bug tracking: http://trac.hasno.info/ruby-hl7
 * Subversion:   svn://hasno.info/ruby-hl7
+* Git:          git://github.com/segfault/ruby-hl7.git
 * Docs:         http://ruby-hl7.rubyforge.org
 * Rubyforge:    http://rubyforge.org/projects/ruby-hl7
 * Lists
   * Developers: mailto:ruby-hl7-devel@rubyforge.org
   * Users: mailto:ruby-hl7-users@rubyforge.org
 
- Copyright (c) 2006-2007 Mark Guzman
- $Id$
+ Copyright (c) 2006-2008 Mark Guzman
 
 == Download and Installation
 Install the gem using the following command:

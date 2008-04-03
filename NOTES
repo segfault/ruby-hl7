@@ -1,5 +1,7 @@
-$Id$
-== Ruby-HL7 v0.2.50 Release Notes
+== Ruby-HL7 v0.3 Release Notes
  Changes:
-   * Updated to support facets >= 2.0
+   * Removed dependency on facets
+   * some minor maintenance changes
+   * switched the code repo to git, still mirrored to svn
+
 
