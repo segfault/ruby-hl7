@@ -9,12 +9,23 @@ class BasicParsing < Test::Unit::TestCase
     @empty_txt = open( './test_data/empty.hl7' ).readlines.first
     @empty_segments_txt = open( './test_data/empty_segments.hl7' ).readlines.first
     @base_msh = "MSH|^~\\&|LAB1||DESTINATION||19910127105114||ORU^R03|LAB1003929"
+    @base_msh_alt_delims = "MSH$@~\\&|LAB1||DESTINATION||19910127105114||ORU^R03|LAB1003929"
   end
 
   def test_simple_msh
     msg = HL7::Message.new
     msg.parse @simple_msh_txt
     assert_equal( @simple_msh_txt, msg.to_hl7 )
+  end
+  
+  def test_parse_delims
+    msg = HL7::Message.new( @base_msh )
+    assert_equal( "|", msg.element_delim )
+    assert_equal( "^", msg.item_delim )
+    
+    msg = HL7::Message.new( @base_msh_alt_delims )
+    assert_equal( "$", msg.element_delim )
+    assert_equal( "@", msg.item_delim )
   end
 
   def test_constructor_parse

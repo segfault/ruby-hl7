@@ -228,6 +228,16 @@ class HL7::Message
   end
 
   private
+  # Get the element delimiter from an MSH segment
+  def parse_element_delim(str)
+    (str && str.kind_of?(String)) ? str.slice(3,1) : "|"
+  end
+  
+  # Get the item delimiter from an MSH segment
+  def parse_item_delim(str)
+    (str && str.kind_of?(String)) ? str.slice(4,1) : "^"
+  end
+  
   def parse_enumerable( inary )
     #assumes an enumeration of strings....
     inary.each do |oary|
@@ -251,6 +261,10 @@ class HL7::Message
     @parsing = true
     last_seg = nil
     ary.each do |elm|
+      if elm.slice(0,3) == "MSH" 
+        @item_delim = parse_item_delim(elm)
+        @element_delim = parse_element_delim(elm)
+      end
       last_seg = generate_segment( elm, last_seg ) || last_seg
     end
     @parsing = nil
@@ -271,7 +285,7 @@ class HL7::Message
         # so lets just preserve the data
         kls = HL7::Message::Segment::Default
       end
-      new_seg = kls.new( elm )
+      new_seg = kls.new( elm, [@element_delim, @item_delim] )
       new_seg.segment_parent = self
       
       if last_seg && last_seg.respond_to?(:children) && last_seg.accepts?( seg_name )
@@ -320,16 +334,21 @@ class HL7::Message::Segment
   # setup a new HL7::Message::Segment
   # raw_segment:: is an optional String or Array which will be used as the
   #               segment's field data
-  def initialize(raw_segment="", &blk)
+  # delims:: an optional array of delimiters, where 
+  #               delims[0] = element delimiter
+  #               delims[1] = item delimiter
+  def initialize(raw_segment="", delims=[], &blk)
     @segments_by_name = {}
-    @element_delim = '|'
     @field_total = 0
     @is_child = false
+    
+    @element_delim = (delims.kind_of?(Array) && delims.length>0) ? delims[0] : "|"
+    @item_delim = (delims.kind_of?(Array) && delims.length>1) ? delims[1] : "^"
 
     if (raw_segment.kind_of? Array)
       @elements = raw_segment
     else
-      @elements = raw_segment.split( element_delim, -1 )
+      @elements = raw_segment.split( @element_delim, -1 )
       if raw_segment == ""
         @elements[0] = self.class.to_s.split( "::" ).last 
         @elements << ""
@@ -607,10 +626,10 @@ end
 #  seg.e2 = "KIN HERE"
 #
 class HL7::Message::Segment::Default < HL7::Message::Segment
-  def initialize(raw_segment="")
+  def initialize(raw_segment="", delims=[])
     segs = [] if (raw_segment == "")
     segs ||= raw_segment 
-    super( segs )
+    super( segs, delims )
   end
 end
 
