@@ -6,6 +6,7 @@ class HL7::Message::Segment::OBR < HL7::Message::Segment
   add_field :set_id
   add_field :placer_order_number
   add_field :filler_order_number
+  add_field :universal_service_id
   add_field :priority
   add_field :requested_date
   add_field :observation_date
