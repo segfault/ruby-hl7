@@ -10,6 +10,7 @@ class HL7::Message::Segment::OBX < HL7::Message::Segment
   add_field :observation_value
   add_field :units
   add_field :references_range
+  add_field :abnormal_flags
   add_field :probability
   add_field :nature_of_abnormal_test
   add_field :observation_result_status
