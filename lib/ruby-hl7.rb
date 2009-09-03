@@ -596,6 +596,7 @@ class HL7::Message::Segment
       @elements += missing
     end
 
+    value = value.first if (value && value.kind_of?(Array) && value.length == 1)
     value = field_blk.call( value ) if field_blk
     @elements[ idx ] = value.to_s
   end
