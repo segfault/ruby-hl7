@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #= ruby-hl7.rb
 # Ruby HL7 is designed to provide a simple, easy to use library for
 # parsing and generating HL7 (2.x) messages.
@@ -5,7 +6,7 @@
 #
 # Author:    Mark Guzman  (mailto:segfault@hasno.info)  
 #
-# Copyright: (c) 2006-2007 Mark Guzman  
+# Copyright: (c) 2006-2009 Mark Guzman  
 #
 # License:   BSD  
 #
@@ -356,7 +357,7 @@ class HL7::Message::Segment
     end
 
     if block_given?
-      callctx = eval( "self", blk )
+      callctx = eval( "self", blk.binding )
       def callctx.__seg__(val=nil)
         @__seg_val__ ||= val
       end
@@ -369,9 +370,9 @@ class HL7::Message::Segment
       end
       END
 
-      eval( to_do, blk )
+      eval( to_do, blk.binding )
       yield self 
-      eval( "undef method_missing", blk )
+      eval( "undef method_missing", blk.binding )
     end
   end
 
@@ -471,6 +472,7 @@ class HL7::Message::Segment
       @my_weight
     end
   end
+
 
 
   # allows a segment to store other segment objects

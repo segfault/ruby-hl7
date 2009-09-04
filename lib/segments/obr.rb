@@ -1,4 +1,4 @@
-# $Id$
+# encoding: UTF-8
 require 'ruby-hl7'
 class HL7::Message::Segment::OBR < HL7::Message::Segment
   weight 89 # obr.weight-1
