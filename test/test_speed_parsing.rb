@@ -1,4 +1,4 @@
-# $Id$
+# encoding: UTF-8
 $: << '../lib'
 require 'time'
 require 'test/unit'
