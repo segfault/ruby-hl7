@@ -411,7 +411,7 @@ class HL7::Message::Segment
     else
 
       if args.length > 0
-        write_field( base_sym, args )
+        write_field( base_sym, args.flatten.select { |arg| arg } )
       else
         read_field( base_sym )
       end
