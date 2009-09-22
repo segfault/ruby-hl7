@@ -2,6 +2,7 @@ $: << './lib'
 require 'ruby-hl7'
 require 'rake'
 require 'rubyforge'
+require 'rubygems'
 
 full_name = "Ruby-HL7"
 short_name = full_name.downcase

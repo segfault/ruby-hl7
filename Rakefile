@@ -33,14 +33,13 @@ spec = Gem::Specification.new do |s|
   s.description = "A simple library to parse and generate HL7 2.x messages"
   s.files = FileList["{bin,lib,test_data}/**/*"].to_a
   s.require_path = "lib"
-  s.autorequire = short_name
   s.test_files = FileList["{test}/**/test*.rb"].to_a
   s.has_rdoc = true
+  s.required_ruby_version = '>= 1.8.6'
   s.extra_rdoc_files = %w[README LICENSE]
   s.add_dependency("rake", ">= #{RAKEVERSION}")
   s.add_dependency("rubyforge", ">= #{::RubyForge::VERSION}")
 end
-
 
 Rake::TestTask.new do |t|
   t.test_files = FileList[ 'test/test*.rb', 'test/*test.rb' ]
