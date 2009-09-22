@@ -13,7 +13,7 @@ The version id can be found in the HL7::VERSION constant.
   * Developers: mailto:ruby-hl7-devel@rubyforge.org
   * Users: mailto:ruby-hl7-users@rubyforge.org
 
- Copyright (c) 2006-2008 Mark Guzman
+ Copyright (c) 2006-2009 Mark Guzman
 
 == Download and Installation
 Install the gem using the following command:

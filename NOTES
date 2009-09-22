@@ -1,7 +1,5 @@
-== Ruby-HL7 v0.3 Release Notes
+== Ruby-HL7 v0.4 Release Notes
  Changes:
-   * Removed dependency on facets
-   * some minor maintenance changes
-   * switched the code repo to git, still mirrored to svn
+   * ruby 1.9 compatability changes
 
 
