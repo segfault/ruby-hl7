@@ -279,7 +279,9 @@ class HL7::Message
       end
       
       seg_name = seg_parts[0]
-      if HL7::Message::Segment.constants.index(seg_name) # do we have an implementation?
+      if RUBY_VERSION < "1.9" && HL7::Message::Segment.constants.index(seg_name) # do we have an implementation?
+        kls = eval("HL7::Message::Segment::%s" % seg_name)
+      elsif RUBY_VERSION >= "1.9" && HL7::Message::Segment.constants.index(seg_name.to_sym)
         kls = eval("HL7::Message::Segment::%s" % seg_name)
       else
         # we don't have an implementation for this segment
@@ -621,7 +623,7 @@ end
 #end
 
 # Provide a catch-all information preserving segment
-# * no aliases are not provided BUT you can use the numeric element accessor
+# * nb: aliases are not provided BUT you can use the numeric element accessor
 # 
 #  seg = HL7::Message::Segment::Default.new
 #  seg.e0 = "NK1"
