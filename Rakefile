@@ -129,40 +129,42 @@ task :clean => [ :clobber_rdoc, :clobber_package ] do
   end
 end
 
-desc 'Publish RDoc to RubyForge'
-task :publish_docs => [:clean, :rdoc] do
-  config = YAML.load(File.read(File.expand_path("~/.rubyforge/user-config.yml")))
-  host = "#{config["username"]}@rubyforge.org"
-  remote_dir = "/var/www/gforge-projects/#{spec.rubyforge_project}"
-  local_dir = 'doc'
-  sh %{rsync -av --delete #{local_dir}/ #{host}:#{remote_dir}}
-end
-
-desc 'Package and upload the release to rubyforge.'
-task :release => [:clean, :package] do |t|
-  v = ENV["VERSION"] or abort "Must supply VERSION=x.y.z"
-  abort "Versions don't match '#{v}' vs '#{spec.version}'" if v != spec.version.to_s
-  pkg = "pkg/#{spec.name}-#{spec.version}"
-
-  if $DEBUG then
-    puts "release_id = rf.add_release #{spec.rubyforge_project.inspect}, #{spec.name.inspect}, #{version.inspect}, \"#{pkg}.tgz\""
-    puts "rf.add_file #{spec.rubyforge_project.inspect}, #{spec.name.inspect}, release_id, \"#{pkg}.gem\""
+namespace :forge do
+  desc 'Publish RDoc to RubyForge'
+  task :publish_docs => [:clean, :rdoc] do
+    config = YAML.load(File.read(File.expand_path("~/.rubyforge/user-config.yml")))
+    host = "#{config["username"]}@rubyforge.org"
+    remote_dir = "/var/www/gforge-projects/#{spec.rubyforge_project}"
+    local_dir = 'doc'
+    sh %{rsync -av --delete #{local_dir}/ #{host}:#{remote_dir}}
   end
 
-  rf = RubyForge.new
-  puts "Logging in"
-  rf.login
+  desc 'Package and upload the release to rubyforge.'
+  task :release => [:clean, :package] do |t|
+    v = ENV["VERSION"] or abort "Must supply VERSION=x.y.z"
+    abort "Versions don't match '#{v}' vs '#{spec.version}'" if v != spec.version.to_s
+    pkg = "pkg/#{spec.name}-#{spec.version}"
 
-  changes = open("NOTES").readlines.join("") if File.exists?("NOTES")
-  c = rf.userconfig
-  c["release_notes"] = spec.description if spec.description
-  c["release_changes"] = changes if changes
-  c["preformatted"] = true
+    if $DEBUG then
+      puts "release_id = rf.add_release #{spec.rubyforge_project.inspect}, #{spec.name.inspect}, #{version.inspect}, \"#{pkg}.tgz\""
+      puts "rf.add_file #{spec.rubyforge_project.inspect}, #{spec.name.inspect}, release_id, \"#{pkg}.gem\""
+    end
 
-  files = ["#{pkg}.tgz", "#{pkg}.gem"].compact
+    rf = RubyForge.new
+    puts "Logging in"
+    rf.login
 
-  puts "Releasing #{spec.name} v. #{spec.version}"
-  rf.add_release spec.rubyforge_project, spec.name, spec.version.to_s, *files
+    changes = open("NOTES").readlines.join("") if File.exists?("NOTES")
+    c = rf.userconfig
+    c["release_notes"] = spec.description if spec.description
+    c["release_changes"] = changes if changes
+    c["preformatted"] = true
+
+    files = ["#{pkg}.tgz", "#{pkg}.gem"].compact
+
+    puts "Releasing #{spec.name} v. #{spec.version}"
+    rf.add_release spec.rubyforge_project, spec.name, spec.version.to_s, *files
+  end
 end
 
 desc 'Install the package as a gem'
