@@ -20,6 +20,33 @@ short_name = full_name.downcase
 desc 'Default: run unit tests.'
 task :default => :test
 
+if RUBY_VERSION < '1.9.1' 
+  begin
+    require 'jeweler'
+    Jeweler::Tasks.new do |s|
+      s.name = short_name
+      s.full_name 
+      s.summary = "Ruby HL7 Library"
+      s.authors = ["Mark Guzman"]
+      s.email = "segfault@hasno.info"
+      s.homepage = "http://github.com/segfault/ruby-hl7"
+      s.description = "A simple library to parse and generate HL7 2.x messages"
+      s.require_path = "lib"
+      s.has_rdoc = true
+      s.rubyforge_project = short_name
+      s.required_ruby_version = '>= 1.8.6'
+      s.extra_rdoc_files = %w[README LICENSE]
+      s.files = FileList["{bin,lib,test_data}/**/*"].to_a
+      s.test_files = FileList["{test}/**/test*.rb"].to_a
+      s.add_dependency("rake", ">= #{RAKEVERSION}")
+      s.add_dependency("rubyforge", ">= #{::RubyForge::VERSION}")
+    end
+  rescue LoadError
+    puts "Jeweler, or one of its dependencies, is not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+  end
+end
+
+
 spec = Gem::Specification.new do |s| 
   s.name = short_name
   s.full_name
