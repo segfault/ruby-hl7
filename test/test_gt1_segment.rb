@@ -15,9 +15,9 @@ class GT1Segment < Test::Unit::TestCase
     assert_equal( "123 Guarantor Avenue^^Tucson^AZ^85701", gt1.guarantor_address )
     assert_equal( "5208675309", gt1.guarantor_phone )
     assert_equal( "5208675310", gt1.guarantor_work_phone )
-    assert_equal( "19010101", guarantor_dob )
-    assert_equal( "F", guarantor_sex )
-    assert_equal( "1", guarantor_type )
+    assert_equal( "19010101", gt1.guarantor_dob )
+    assert_equal( "F", gt1.guarantor_sex )
+    assert_equal( "1", gt1.guarantor_type )
   end
   
   def test_creation

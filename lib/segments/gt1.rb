@@ -1,6 +1,6 @@
 # encoding: UTF-8
 require 'ruby-hl7'
-class HL7::Message::Segment::EVN < HL7::Message::Segment
+class HL7::Message::Segment::GT1 < HL7::Message::Segment
   weight 3 # should occur after PV1 segment
   add_field :set_id, :idx => 1
   add_field :guarantor_name, :idx => 3
