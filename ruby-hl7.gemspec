@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.files = [
     "lib/ruby-hl7.rb",
      "lib/segments/evn.rb",
+     "lib/segments/gt1.rb",
      "lib/segments/msa.rb",
      "lib/segments/msh.rb",
      "lib/segments/nte.rb",
@@ -51,6 +52,7 @@ Gem::Specification.new do |s|
      "test/test_child_segment.rb",
      "test/test_default_segment.rb",
      "test/test_dynamic_segment_def.rb",
+     "test/test_gt1_segment.rb",
      "test/test_msa_segment.rb",
      "test/test_obr_segment.rb",
      "test/test_obx_segment.rb",
@@ -63,14 +65,14 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<rake>, [">= 0.8.7"])
+      s.add_runtime_dependency(%q<rake>, [">= 10.0.3"])
       s.add_runtime_dependency(%q<rubyforge>, [">= 2.0.0"])
     else
-      s.add_dependency(%q<rake>, [">= 0.8.7"])
+      s.add_dependency(%q<rake>, [">= 10.0.3"])
       s.add_dependency(%q<rubyforge>, [">= 2.0.0"])
     end
   else
-    s.add_dependency(%q<rake>, [">= 0.8.7"])
+    s.add_dependency(%q<rake>, [">= 10.0.3"])
     s.add_dependency(%q<rubyforge>, [">= 2.0.0"])
   end
 end
