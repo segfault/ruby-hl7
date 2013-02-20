@@ -33,4 +33,7 @@ cursor_positions:
     :timestamp: 2013-02-20 07:59:35 -07:00
     :selection_offset: 7296
     :block_selection_mode: false
+  - :path: .gitignore
+    :cursor_offset: 7
+    :timestamp: 2013-02-20 08:27:44 -07:00
 files_to_retain: 0
