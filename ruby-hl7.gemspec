@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
      "lib/segments/oru.rb",
      "lib/segments/pid.rb",
      "lib/segments/pv1.rb",
+     "lib/segments/orc.rb",
      "lib/segments/pv2.rb",
      "lib/segments/qrd.rb",
      "lib/segments/qrf.rb",

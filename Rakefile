@@ -2,9 +2,9 @@
 require 'rubygems'
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'rake/packagetask'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 require 'rake/contrib/sshpublisher'
 require 'rbconfig'
 require 'rubyforge'
@@ -117,7 +117,7 @@ Rake::RDocTask.new do |rd|
 end
 
 
-Rake::GemPackageTask.new(spec) do |pkg| 
+Gem::PackageTask.new(spec) do |pkg| 
   pkg.need_tar = true 
 end 
 
