@@ -16,30 +16,7 @@ Gem::Specification.new do |s|
     "LICENSE",
      "README"
   ]
-  s.files = [
-    "lib/ruby-hl7.rb",
-     "lib/segments/evn.rb",
-     "lib/segments/msa.rb",
-     "lib/segments/msh.rb",
-     "lib/segments/nte.rb",
-     "lib/segments/obr.rb",
-     "lib/segments/obx.rb",
-     "lib/segments/oru.rb",
-     "lib/segments/pid.rb",
-     "lib/segments/pv1.rb",
-     "lib/segments/orc.rb",
-     "lib/segments/pv2.rb",
-     "lib/segments/qrd.rb",
-     "lib/segments/qrf.rb",
-     "test_data/adt_a01.hl7",
-     "test_data/empty.hl7",
-     "test_data/empty_segments.hl7",
-     "test_data/lotsunknowns.hl7",
-     "test_data/obxobr.hl7",
-     "test_data/rqi_r04.hl7",
-     "test_data/test.hl7",
-     "test_data/test2.hl7"
-  ]
+  s.files = `git ls-files`.split "\n"
   s.homepage = %q{http://github.com/segfault/ruby-hl7}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
@@ -47,17 +24,7 @@ Gem::Specification.new do |s|
   s.rubyforge_project = %q{ruby-hl7}
   s.rubygems_version = %q{1.3.4}
   s.summary = %q{Ruby HL7 Library}
-  s.test_files = [
-    "test/test_basic_parsing.rb",
-     "test/test_child_segment.rb",
-     "test/test_default_segment.rb",
-     "test/test_dynamic_segment_def.rb",
-     "test/test_msa_segment.rb",
-     "test/test_obr_segment.rb",
-     "test/test_obx_segment.rb",
-     "test/test_pid_segment.rb",
-     "test/test_speed_parsing.rb"
-  ]
+  s.test_files = `git ls-files -- {test}/*`.split "\n"
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION

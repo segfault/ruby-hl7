@@ -1,0 +1,20 @@
+PATH
+  remote: .
+  specs:
+    ruby-hl7 (0.4.0)
+      rake (>= 0.8.7)
+      rubyforge (>= 2.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json_pure (1.8.1)
+    rake (10.1.1)
+    rubyforge (2.0.4)
+      json_pure (>= 1.1.7)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  ruby-hl7!
